@@ -1,0 +1,174 @@
+/**
+* http://s.mlkshk.com/r/97VP
+*/
+
+body {
+	background-color: #141a26;
+	margin: 0;
+	padding: 0;
+	text-align: center;
+	overflow: hidden;
+	font-family: 'Source Sans Pro', Helvetica, Arial, sans-serif;
+	font-weight: 400;
+	color: #fff;
+}
+h1 {
+	font-family: 'Source Sans Pro', Helvetica, Arial, sans-serif;
+	font-weight: 200;
+	font-size: 20pt;
+	position: absolute;
+	top: 40px;
+	width: 100%;
+	margin: 0;
+	padding: 0;
+	letter-spacing: .5em;
+}
+
+span {
+	letter-spacing: .2em;
+}
+
+.light { 
+	font-weight: 200;
+}
+
+.whoops { 
+	font-weight: 200;
+	font-size: 10pt;
+	margin-top: 10px;
+}
+
+#soundcloud {
+	position: absolute;
+	top: 45%;
+	width: 100%;
+	display: block;
+	margin-left: auto;
+	margin-right: auto;
+}
+
+#soundcloud form {
+	display:inline-block;
+}
+
+#soundcloud .title {
+	letter-spacing: .65em;
+	margin-bottom: 25px;
+	font-weight: 200;
+	font-size: 12pt;
+	color: rgba(255,255,255, .85);
+}
+
+input[type=text] {
+    font-family: 'Source Sans Pro', Helvetica, Arial, sans-serif;
+	font-size: 10pt;
+	font-weight: 200;
+	letter-spacing: .1em;  
+    border: none;
+    width: 450px;
+    padding: 6px 10px; 
+    margin-bottom: 20px;
+    background: rgba(255,255,255,.15);
+    color: #ffffff;
+    text-align: center;
+}
+
+input[type=submit] {
+    font-family: 'Source Sans Pro', Helvetica, Arial, sans-serif;
+    border: hidden;
+    width: 200px;
+    padding: 5px 10px; 
+    background:transparent;
+    color: #ffffff;
+    text-align: center;
+	cursor: pointer;
+	letter-spacing: .3em;   
+	font-size: 9.5pt;
+	font-weight: 200;
+}
+
+#info {	
+	xtext-shadow: 1px 1px 3px rgba(0,0,0,0.5);
+	position: absolute;
+	bottom: 20px;
+	width: 100%;
+	padding: 5px;
+	z-index: 100;	
+	font-size: 12px;
+	line-height:20px;
+}
+
+#latlng {
+	text-align: left;
+	position: absolute;
+	bottom: 40px;
+	left: 40px;
+	font-size: 10pt;
+	letter-spacing: .2em;
+	line-height: 24px;
+}
+
+#songinfo {
+	text-align: left;
+	position: absolute;
+	top: 40px;
+	left: 40px;
+	font-size: 12pt;
+	letter-spacing: .2em;
+	line-height: 24px;
+}
+
+#title {
+	font-size: 10pt;
+}
+
+#timestamp {
+	color:#95acb7;
+}
+
+
+#loading {
+	font-weight: 200;
+	font-size: 12pt;
+	letter-spacing: .5em;
+	position: absolute;
+	top: 50%;
+	width: 100%;
+}
+
+#debugCtx{
+	position: absolute;
+	top:10px;
+	left: 100px;
+	xwidth: 800px;
+	xheight: 600px;
+}
+
+a {
+    color: #fff;
+	xtext-decoration:none;
+}
+
+#chooseLocation {
+	position: absolute;
+	bottom: 40px;
+	right: 40px;
+}
+
+.styled-select select {
+	background: rgba(255,255,255,.15);
+	width: 175px;
+	padding: 10px;
+	line-height: 1;
+	border: 0;
+	border-radius: 0;
+	font-family: 'Source Sans Pro', Helvetica, Arial, sans-serif;
+	font-size: 10pt;
+	font-weight: 200;
+	letter-spacing: .2em;  
+	color: #ffffff;
+  	-webkit-appearance: none;
+}
+select, option {
+    text-align:right;   
+}
