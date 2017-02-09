@@ -33,24 +33,17 @@
 
 		<script>
 			loadCSS("{{cdnUrl}}dist/{{ rev('css/main.css') |default('')}}");
-			requirejs(["main"]);
+			requirejs(["main", "/static/rackcity/js/rackcity.js", "/static/rackcity/js/TrackballControls.js"]);
 		</script>
 
-		<script src="//cdnjs.cloudflare.com/ajax/libs/three.js/r68/three.min.js"></script>
-		<script src="//code.jquery.com/jquery-2.1.1.min.js"></script>
-		<script src="//connect.soundcloud.com/sdk.js"></script>
 		<script src="/static/rackcity/js/three.min.js"></script>
-		<script src="/static/rackcity/js/jquery-2.1.1.min.js"></script>
 		<script src="/static/rackcity/js/soundcloud.js"></script>
 
 		<script type="text/javascript" src="/static/rackcity/js/beatdetect/fft.js"></script>
 		<script type="text/javascript" src="/static/rackcity/js/beatdetect/beatdetect.js"></script>
 		<script src="/static/rackcity/js/dat.gui.min.js"></script>
 		<script data-main="app" src="/static/rackcity/js/require.js"></script>
-
 		<script src="/static/rackcity/js/main.js"></script>
-
-
 
 		<noscript><link rel="stylesheet" href="{{cdnUrl}}dist/{{ rev('css/main.css') }}" /></noscript>
 	</body>

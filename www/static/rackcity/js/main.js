@@ -7,11 +7,6 @@ var APP_ENGINE = true;
 var USE_STATS = false;
 var SC_LINK = 'test';
 
-define(function (require)
-{
-	var rackcity = require('rackcity'),
-		trackball = require('TrackballControls');
-
 	var mouseX = 0, mouseY = 0, windowHalfX = window.innerWidth / 2, windowHalfY = window.innerHeight / 2, camera, scene, renderer, material, container;
 	var width = window.innerWidth;
 	var height = window.innerHeight;
@@ -41,8 +36,10 @@ define(function (require)
 		"LONDON" : { data: 'data/london.json', coords:{latitude:"51.49994", longitude: "-0.12749"}}
 	};
 
-	$(document).ready(function()
-	{
+		var rackcity = require(['rackcity']),
+		trackball = require(['TrackballControls']);
+
+	function startRackCityMain() {
 		if (!window.WebGLRenderingContext)
 		{
 		    // Browser has no idea what WebGL is. Suggest they
@@ -68,7 +65,6 @@ define(function (require)
 		init();
 		initSoundcloud();
 		getLocation();
-	});
 
 	function init()
 	{
@@ -360,41 +356,4 @@ define(function (require)
 
 		renderer.setSize( window.innerWidth, window.innerHeight );
 	}
-
-
-	function DropDown(el) {
-		this.dd = el;
-		this.placeholder = this.dd.children('span');
-		this.opts = this.dd.find('ul.dropdown > li');
-		this.val = '';
-		this.index = -1;
-		this.initEvents();
 	}
-
-	DropDown.prototype = {
-		initEvents : function() {
-			var obj = this;
-
-			obj.dd.on('click', function(event){
-				$(this).toggleClass('active');
-				return false;
-			});
-
-			obj.opts.on('click',function(){
-				var opt = $(this);
-				obj.val = opt.text();
-				obj.index = opt.index();
-				obj.placeholder.text('Gender: ' + obj.val);
-			});
-		},
-		getValue : function() {
-			return this.val;
-		},
-		getIndex : function() {
-			return this.index;
-		}
-	}
-
-
-
-});

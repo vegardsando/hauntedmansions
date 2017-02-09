@@ -66,6 +66,8 @@ if (typeof FastClick === 'function') { FastClick.attach(document.body); }
 	};
 
 	$html.addClass('lastet');
+
+  startRackCityMain();
 /*=======================================================
 				  @Click/hover events
 =======================================================*/

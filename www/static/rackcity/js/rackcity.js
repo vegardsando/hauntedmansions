@@ -1,9 +1,9 @@
-define(function (require) 
+define(function (require)
 {
 	var proj4 = require('proj4'),
 		audioController = require('audiocontroller');
 
-	
+
 
 	var scene;
 
@@ -20,7 +20,7 @@ define(function (require)
 		scene = sc;
 	}
 
-	function init3D(data, center_pt) 
+	function init3D(data, center_pt)
 	{
 		console.log("RackCity::init()");
 		console.log(data);
@@ -45,8 +45,8 @@ define(function (require)
 	}
 
 	function initHomeLine()
-	{		
-		var vertexShader = 
+	{
+		var vertexShader =
 			//'uniform float[512] spectrum;\n' +
 			'varying float vHeight;' +
 		    'void main() {\n' +
@@ -55,7 +55,7 @@ define(function (require)
 		    '    gl_Position = projectionMatrix * mvPosition;\n' +
 		    '}';
 
-		var fragmentShader = 
+		var fragmentShader =
 		    'varying float vHeight;' +
 		    'void main() {\n' +
 		    '	float a = 1.0;\n' +
@@ -89,9 +89,9 @@ define(function (require)
 
 	function drawRoads(container)
 	{
-		var vertexShader = 
+		var vertexShader =
 			'uniform float burst;\n' +
-			'varying float vPercent;\n' +		
+			'varying float vPercent;\n' +
 			'varying float vDist;\n' +
 		    'void main() {\n' +
 		    '   vec4 mvPosition = modelViewMatrix * vec4( position, 1.0 );\n' +
@@ -100,7 +100,7 @@ define(function (require)
 		    '   gl_Position = projectionMatrix * mvPosition;\n' +
 		    '}';
 
-		var fragmentShader = 
+		var fragmentShader =
 			'uniform float burst;\n' +
 		    'varying float vPercent;\n' +
 			'varying float vDist;\n' +
@@ -109,7 +109,7 @@ define(function (require)
 		    '    if(vDist > 850.0 )\n' +
 		    '		a = 0.0;\n' +
 		    '	 else if(vDist > 500.0)\n' +
-		    '    	a = (850.0 - vDist) / 500.0;\n' + 
+		    '    	a = (850.0 - vDist) / 500.0;\n' +
 		    '    gl_FragColor = vec4( 1.0, 1.0, 1.0, a );//1.0 );\n' +
 		    '}';
 
@@ -136,7 +136,7 @@ define(function (require)
 			for(var j = 0; j < pts.length; j++)
 			{
 				var latlng = [pts[j].lon, pts[j].lat];
-				var pt_xy = proj4('EPSG:4326', 'EPSG:3785', latlng);  
+				var pt_xy = proj4('EPSG:4326', 'EPSG:3785', latlng);
 				var vec3 = new THREE.Vector3(
 		    		pt_xy[1] - center_xy[1],
 		    		0,
@@ -155,7 +155,7 @@ define(function (require)
 
 	function drawBuildings(container)
 	{
-		var particleShaderVertex = 
+		var particleShaderVertex =
 			'uniform float pointSize;\n' +
 			'uniform float volume;\n' +
 			'uniform float alpha;\n' +
@@ -166,7 +166,7 @@ define(function (require)
 		    '    gl_Position = vec4(pos.x, pos.y, pos.z, pos.w);\n' +
 		    '}';
 
-		var particleShaderFragment = 
+		var particleShaderFragment =
 			'uniform vec3 color;\n' +
 		    'uniform float alpha;\n' +
 		    'void main() {\n' +
@@ -177,8 +177,8 @@ define(function (require)
 	    var uniforms = {
 	        color: { type: "c", value: new THREE.Color( 0xd1effd ) },
 	        volume: { type: "f", value: 0 },
-	        pointSize: { type: "f", value: 2 }, 
-	        alpha: { type: "f", value: 0.5 }, 
+	        pointSize: { type: "f", value: 2 },
+	        alpha: { type: "f", value: 0.5 },
 	    };
 
 		var material = new THREE.ShaderMaterial({
@@ -203,7 +203,7 @@ define(function (require)
 		//sort buildings by height
 		for(var i = 0; i < container.length; i++)
 		{
-			var height = Math.round(container[i]['height']);			
+			var height = Math.round(container[i]['height']);
 			if(isNaN(height))
 				height = Math.round(container[i]['ele']);
 			if(isNaN(height))
@@ -227,9 +227,9 @@ define(function (require)
 		//chunk through height arrays in thirds
 		var i,j,temparray,chunk = buildingsByHeight.length / 3;
 
-		for (i=0,j=buildingsByHeight.length; i<j; i+=chunk) 
+		for (i=0,j=buildingsByHeight.length; i<j; i+=chunk)
 		{
-		    temparray = buildingsByHeight.slice(i,i+chunk);		    
+		    temparray = buildingsByHeight.slice(i,i+chunk);
 		    lowsMidsHighsBuildingsGroups.push(createBuildingGroup(temparray));
 		}
 
@@ -250,13 +250,13 @@ define(function (require)
 						for(var j = 0; j < pts.length; j++)
 						{
 							var latlng = [pts[j].lon, pts[j].lat];
-							var pt_xy = proj4('EPSG:4326', 'EPSG:3785', latlng);  
+							var pt_xy = proj4('EPSG:4326', 'EPSG:3785', latlng);
 
 							var vec3 = new THREE.Vector3(
 					    		pt_xy[1] - center_xy[1],
 					    		h * 5,
-					    		pt_xy[0] - center_xy[0] 
-					    	);					
+					    		pt_xy[0] - center_xy[0]
+					    	);
 
 						    geometry.vertices.push(vec3);
 						}
@@ -268,13 +268,13 @@ define(function (require)
 						for(var j = 0; j < pts.length; j++)
 						{
 							var latlng = [pts[j].lon, pts[j].lat];
-							var pt_xy = proj4('EPSG:4326', 'EPSG:3785', latlng);  
+							var pt_xy = proj4('EPSG:4326', 'EPSG:3785', latlng);
 
 							var vec3 = new THREE.Vector3(
-					    		pt_xy[1] - center_xy[1], 
+					    		pt_xy[1] - center_xy[1],
 					    		h * 5,
 					    		pt_xy[0] - center_xy[0]
-					    	);					
+					    	);
 
 						    topDotsGeom.vertices.push(vec3);
 						}
@@ -285,12 +285,12 @@ define(function (require)
 				//draw top and bottom
 				drawBuildingOutline(pts, height);
 
-				
+
 		    }
-		    
+
 		    var mesh = new THREE.PointCloud( geometry, material );
 			var topDotsMesh = new THREE.PointCloud( topDotsGeom, topDotsMaterial );
-			
+
 			// add it to the scene
 			scene.add(mesh);
 			scene.add(topDotsMesh);
@@ -299,7 +299,7 @@ define(function (require)
 			group.topDotsMesh = topDotsMesh;
 
 			return group;
-		}		
+		}
 	}
 
 	function drawBuildingOutline(pts, height)
@@ -309,13 +309,13 @@ define(function (require)
 		for(var j = 0; j < pts.length; j++)
 		{
 			var latlng = [pts[j].lon, pts[j].lat];
-			var pt_xy = proj4('EPSG:4326', 'EPSG:3785', latlng);  
+			var pt_xy = proj4('EPSG:4326', 'EPSG:3785', latlng);
 
 			var vec3 = new THREE.Vector3(
-	    		pt_xy[1] - center_xy[1], 
+	    		pt_xy[1] - center_xy[1],
 	    		0, //height === undefined ? 0 : height * 5,
 	    		pt_xy[0] - center_xy[0]
-	    	);					
+	    	);
 
 		    geometry.vertices.push(vec3);
 		}
@@ -327,36 +327,36 @@ define(function (require)
 		scene.add(line);
 	}
 
-	var duration; 
+	var duration;
 
 	/**
-	 * initAudio() 
+	 * initAudio()
 	 * pass URL to start audioContext for managing visualization
 	 **/
 	function initAudio(track, sc_client_id)
-	{	
+	{
 		console.log("RackCity::initAudio() ");
 		console.log(track);
 
 		var url = track.stream_url + "?client_id=" + sc_client_id;
-		
+
 		duration = track.duration;
-		
+
 		$("#title").text(track.title);
 		$("#songinfo").show();
 
-		
+
 		window.AudioContext = window.AudioContext || window.webkitAudioContext;
 		var audioContext = new AudioContext();
 		var sampleRate = audioContext.sampleRate;
 
 		var beatdetect = new FFT.BeatDetect(1024, sampleRate);
-		
+
 		var source = audioContext.createBufferSource();
 		source.onended = function() {
 			console.log("song over"); //well this shit doesnt work
 		}
-		
+
 		var analyser = audioContext.createAnalyser();
 		analyser.smoothingTimeConstant = 0.85;
 		analyser.fftSize = 2048;
@@ -364,22 +364,22 @@ define(function (require)
         var bassSize = 0;
         var trebSize = 0;
 
-		audioController.initAudio(url, audioContext, source, analyser, function() 
+		audioController.initAudio(url, audioContext, source, analyser, function()
 		{
 			var array =  new Uint8Array(analyser.frequencyBinCount);
 	        analyser.getByteFrequencyData(array);
-	 		
+
 	 		var floats = new Float32Array(analyser.frequencyBinCount);
 	 		analyser.getFloatTimeDomainData(floats);
-	 		
+
 			beatdetect.detect(floats);
 
-			//todo - push all this to the shader along with 
+			//todo - push all this to the shader along with
 			//texture filled with actual float array of sound buffer
 			if(beatdetect.isKick() ) bassSize = 4;//.75; //console.log("isKick()");
 			if(bassSize > 0) bassSize -= .25;
 			drawLines(bassSize, large_roads_lines);
-			
+
 			if(beatdetect.isSnare() ) trebSize = 2.75;// console.log("isSnare()");
 			if(trebSize > 0) trebSize -= .05;
 			drawLines(trebSize, small_road_lines);
@@ -400,7 +400,7 @@ define(function (require)
 		});
 	}
 
-	function map(value, start1, stop1, start2, stop2) 
+	function map(value, start1, stop1, start2, stop2)
 	{
     	return start2 + (stop2 - start2) * ((value - start1) / (stop1 - start1));
   	}
@@ -421,14 +421,14 @@ define(function (require)
 	function getAverageVolume(array) {
         var values = 0;
         var average;
- 
+
         var length = array.length;
- 
+
         // get all the frequency amplitudes
         for (var i = 0; i < length; i++) {
             values += array[i];
         }
- 
+
         average = values / length;
         return average;
     }
@@ -440,12 +440,12 @@ define(function (require)
 	// 	// startViz();
 	// }
 
-	function update() 
-	{	
+	function update()
+	{
 
 	}
 
-	function formatTime(seconds) 
+	function formatTime(seconds)
 	{
 		minutes = Math.floor(seconds / 60);
 		minutes = (minutes >= 10) ? minutes : "0" + minutes;
@@ -461,5 +461,3 @@ define(function (require)
 		update:update
 	};
 });
-
-
