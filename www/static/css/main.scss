@@ -1,16 +1,298 @@
 @import "_inc/mixins";
 @import "_inc/variables";
 
-::-moz-selection {
-    background: $selectfarge;
-	color: set-dynamic-color($selectfarge);
-}
-
-::selection {
-    background: $selectfarge;
-	color: set-dynamic-color($selectfarge);
-}
-
 body {
   background-color: black;
+  overflow-x: hidden;
+}
+
+#backdrop {
+  position: absolute;
+  top: 0;
+  left: 0;
+  background-size: cover;
+  background-attachment: fixed;
+  width: 100%;
+  min-height: 100%;
+
+  h1 {
+    color: #FFFFFF;
+    font-size: 0;
+  }
+
+}
+
+.logo-emblem {
+  position: absolute;
+  bottom: 50px;
+  height: 70px;
+  width: 58px;
+  left: 50%;
+  z-index: 1;
+  margin-left: -40px;
+}
+
+#loading {
+  color: #ffffff;
+  position: fixed;
+  bottom: 15px;
+  right: 15px;
+  font-size: 25px;
+  z-index: 1;
+  text-align: center;
+  background: none;
+}
+
+#btn-startstop {
+  position: absolute;
+  position: fixed;
+  top: 12px;
+  right: 10px;
+  z-index: 3;
+  font-family: $font_default;
+  color: #FFFFFF;
+  background: none;
+  background-image: url('/static/svg/symbols/icon-mute.svg');
+  background-repeat: no-repeat;
+  background-size: 35px;
+  background-position: 75px -3px;
+  border: none;
+  font-size: 24px;
+  font-weight: bold;
+  width: 120px;
+
+  &:hover {
+    text-decoration: line-through;
+    cursor: pointer;
+    color: $color_pr3;
+    background-image: url('/static/svg/symbols/icon-mute-hover.svg');
+  }
+}
+
+
+.visualizer {
+  position: fixed;
+  bottom: 0;
+  z-index: -1;
+  right: -50%;
+}
+
+#freq {
+  transition: opacity 1s ease;
+  opacity: 0;
+  height: 0;
+
+  &.animateHue {
+    opacity: 0.6;
+    height: auto;
+  }
+}
+
+.inner-wrapper {
+  position: relative;
+  z-index: 1;
+}
+
+.bandlogo {
+  margin-top: 10%;
+  margin-left: 10%;
+  max-width: 570px;
+
+  &:hover {
+    src:url('/static/img/HM logo-hover.svg');
+  }
+}
+
+.submenu {
+
+  z-index: 1;
+  position: relative;
+  margin-bottom: 190px;
+  padding-left: 30px;
+  width: 95%;
+  max-width: 560px;
+
+  ul {
+    font-family: $font_default;
+    list-style: none;
+    padding: 0;
+    text-align: center;
+  }
+
+
+
+  @media #{$tablet} {
+		width: 65%;
+    padding-left: 50px;
+	}
+
+  @media #{$desktop} {
+		width: 55%;
+    padding-left: 100px;
+	}
+
+
+
+  a {
+    color: #FFFFFF;
+    font-weight: bold;
+    font-size: $h2;
+
+    &:hover {
+      color: $color_pr3;
+      text-decoration: line-through;
+    }
+  }
+
+  li {
+    display: inline-block;
+  }
+}
+
+.social-icons {
+  width: 80px;
+  height: 80px;
+}
+
+.text-block {
+  padding-left: 10%;
+  width: 60%;
+  font-size: 20px;
+  margin-bottom: 100px;
+
+  p {
+    font-weight: bold;
+    margin: 0;
+  }
+
+  h2 {
+    padding-left: 30px;
+  }
+
+  &:nth-of-type(2) {
+    padding-left: 14%;
+  }
+
+  &:nth-of-type(3) {
+    padding-left: 8%;
+  }
+
+}
+
+.event {
+  display: block;
+  color: #FFFFFF;
+
+  &:hover {
+    text-decoration: line-through;
+    color: $color_pr3;
+
+    p { text-decoration: line-through; }
+  }
+
+  p {display: inline-block; }
+}
+
+// kontaktskjema
+
+form {
+  max-width: 500px;
+}
+
+.submit input {
+  border: none;
+  background: none;
+  color: white;
+  font-weight: bold;
+
+  &:hover {
+    cursor: pointer;
+    text-decoration: line-through;
+    color: $color_pr3;
+  }
+}
+
+.input input, .input textarea{
+  border: none;
+  background: #FFFFFF;
+  padding: 10px;
+  width: 100%;
+}
+
+
+.heading {
+  margin-top: 20px;
+  font-weight: bold;
+}
+
+footer {
+  text-align: center;
+  z-index: 1;
+  position: relative;
+
+  a {
+    color: #FFFFFF;
+
+    &:hover { color: $color_pr3; }
+  }
+}
+
+// Press stuff
+
+#backdropCurtain {
+  background: #000000;
+  position: fixed;
+  top: 0;
+  left: 0;
+  height: 100%;
+  width: 100%;
+  transition: opacity .5s ease-in-out;
+  opacity: 0;
+
+  &.fadeIn {
+    opacity: 0.6;
+  }
+}
+
+.press-stuff {
+
+  .submenu {
+    margin-bottom: 100px;
+  }
+}
+
+.slideshow {
+  width: auto;
+  padding-left: 0;
+
+  .slideshow-text-above {
+    padding-left: 12%;
+  }
+}
+
+.bildetekst {
+  position: absolute;
+  top: 50%;
+  width: 100%;
+  text-align: center;
+}
+
+.swiper-button-prev {
+  background-image: url('/static/svg/symbols/icon-prev.svg');
+  background-size: 40px 40px;
+  height: 40px;
+  width: 40px;
+  margin-left: 20px;
+}
+
+.swiper-button-next {
+  background-image: url('/static/svg/symbols/icon-next.svg');
+  background-size: 40px 40px;
+  height: 40px;
+  width: 40px;
+  margin-right: 20px;
+}
+
+.swiper-pagination-bullet-active {
+  background: #FFFFFF;
 }

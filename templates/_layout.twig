@@ -22,28 +22,61 @@
 	</head>
 	<body class="{{ bodyClass is defined ? bodyClass }}">
 	{% include '_admin/_maintenanceBanner' %}
+	{% set LP = craft.request.isLivePreview ?? false %}
 		<!--[if lt IE 7]>
 			<p class="browsehappy">You are using an <strong>outdated</strong> browser. Please <a href="http://browsehappy.com/">upgrade your browser</a> to improve your experience.</p>
 		<![endif]-->
-		{% block content %}
-			<p>Du mangler innhold</p>
-		{% endblock %}
+
+		{% set img = entry.bilde.first | default(false) %}
+		{% set bilde = craft.imager.transformImage(img.url, [
+			{ width: 920 },
+			{ width: 1440 },
+			{ width: 1920 },
+			], { ratio:"16/9" }) %}
+
+			<style type="text/css">
+
+				#backdrop {
+					background-image: url('{{ bilde[0].url }}');
+				}
+
+				@media (min-width: 600px) {
+					#backdrop {
+						background-image: url('{{ bilde[1].url }}');
+					}
+				}
+
+				@media (min-width: 1000px) {
+					#backdrop {
+						background-image: url('{{ bilde[2].url }}');
+					}
+				}
+
+			</style>
+
+
+		<section id="backdrop">
+		<img class="logo-emblem" src="/static/svg/symbols/icon-logo-emblem.svg" alt="Haunted Mansions">
+
+			{% block content %}
+				<p>Du mangler innhold</p>
+			{% endblock %}
+
+			<footer>
+				{{footer.enkelTekst}}
+			</footer>
+
+		</section>
+
+
 	<!--[if lt IE 9]> <script src="https://oss.maxcdn.com/libs/html5shiv/3.7.0/html5shiv.js"></script> <script src="https://oss.maxcdn.com/libs/respond.js/1.4.2/respond.min.js"></script> <![endif]-->
 
 
 		<script>
 			loadCSS("{{cdnUrl}}dist/{{ rev('css/main.css') |default('')}}");
-			requirejs(["main", "/static/rackcity/js/rackcity.js", "/static/rackcity/js/TrackballControls.js"]);
+			requirejs(["main"]);
 		</script>
 
-		<script src="/static/rackcity/js/three.min.js"></script>
-		<script src="/static/rackcity/js/soundcloud.js"></script>
-
-		<script type="text/javascript" src="/static/rackcity/js/beatdetect/fft.js"></script>
-		<script type="text/javascript" src="/static/rackcity/js/beatdetect/beatdetect.js"></script>
-		<script src="/static/rackcity/js/dat.gui.min.js"></script>
-		<script data-main="app" src="/static/rackcity/js/require.js"></script>
-		<script src="/static/rackcity/js/main.js"></script>
 
 		<noscript><link rel="stylesheet" href="{{cdnUrl}}dist/{{ rev('css/main.css') }}" /></noscript>
 	</body>

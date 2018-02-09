@@ -1,0 +1,65 @@
+{% extends "_layout" %}
+{% set bodyClass = "index" %}
+
+{% block content %}
+	{# {% cache until midnight %}{% minify %} #}
+
+	<div id="backdropCurtain"></div>
+
+			<article class="inner-wrapper">
+				<h1>Haunted Mansions</h1>
+				<a href="/">
+					<img class="bandlogo" src="/static/svg/symbols/HM logo.svg" alt="Haunted Mansions">
+				</a>
+				<div class="submenu">
+					{{ craft.amNav.getNav("mainMenu") }}
+				</div>
+
+				<article class="text-block slideshow">
+					<div class="slideshow-text-above">
+						<h2 id="press-stuff">.press stuff</h2>
+						{{entry.enkelTekst}}
+					</div>
+					{% if  entry.slideshow | length %}
+						<div class="row swiper-container">
+						        <!-- Additional required wrapper -->
+						        <div class="swiper-wrapper">
+						            <!-- Slides -->
+						              {% for slide in entry.slideshow %}
+						                {% set bilde = craft.imager.transformImage(slide, [
+						                  { width: 320, height: 400 },
+						              		{ width: 840, height: 570 },
+						              		{ width: 1360, height: 670 },
+						                  ], { mode: 'crop', position: bilde.fokuspunkt | default('50% 50%') }) %}
+						              <div class="swiper-slide designblock bilde">
+						                  <img class="lazyload" {{ not LP ? 'data-' }}srcset="{{bilde[0].url}} 400w, {{bilde[1].url}} 767w, {{bilde[2].url}}" src="{{ craft.imager.base64Pixel(16, 9) }}" alt="{{img.title | default("")}}">
+						                <aside class="bildetekst">
+															<a href="">Download full size</a>
+						                </aside>
+						              </div>
+						              {% endfor %}
+						        </div>
+						        <!-- If we need pagination -->
+						        <div class="swiper-pagination"></div>
+
+						        <!-- If we need navigation buttons -->
+						        <div class="swiper-button-prev"></div>
+						        <div class="swiper-button-next"></div>
+						    </div>
+
+						{% endif %}
+
+
+				</article>
+
+				<article class="text-block" id="kontaktskjema">
+					<h2 id="contact">.contact</h2>
+					<p>Drop us a line!</p>
+					{{ craft.sproutForms.displayForm('contact') }}
+				</article>
+
+			</article>
+
+
+	{# {% endminify %}{% endcache %} #}
+{% endblock %}

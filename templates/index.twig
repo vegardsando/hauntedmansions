@@ -4,22 +4,49 @@
 {% block content %}
 	{# {% cache until midnight %}{% minify %} #}
 
+	<button type="button" id="btn-startstop">.don't &nbsp; &nbsp; &nbsp; annoy me</button>
+			<article class="inner-wrapper">
+				<h1>Haunted Mansions</h1>
+				<a href="/">
+					<img class="bandlogo" src="/static/svg/symbols/HM logo.svg" alt="Haunted Mansions">
+				</a>
+				<div class="submenu">
+					{{ craft.amNav.getNav("mainMenu") }}
+				</div>
 
-	<h1>RACK CITY</h1>
-	<div id="soundcloud"></div>
-	<div id="loading"></div>
-	<div id="latlng">
-		<span>LATITUDE: </span><span id="lat" class="light"></span>
-		<br/>
-		<span>LONGITUDE: </span><span id="lng" class="light"></span>
-	</div>
-	<div id="songinfo" style="display:none;">
-		<span id="title">FANCY</span>
-		<!-- <br/>
-		<span id="timestamp" class="light">0 : 00 : 00</span> -->
-	</div>
-	<a href="https://github.com/trippedout/rackcity"><img style="position: absolute; top: 0; right: 0; border: 0;" src="https://camo.githubusercontent.com/38ef81f8aca64bb9a64448d0d70f1308ef5341ab/68747470733a2f2f73332e616d617a6f6e6177732e636f6d2f6769746875622f726962626f6e732f666f726b6d655f72696768745f6461726b626c75655f3132313632312e706e67" alt="Fork me on GitHub" data-canonical-src="https://s3.amazonaws.com/github/ribbons/forkme_right_darkblue_121621.png"></a>
+				<div class="visualizer" data-lydfil="{{entry.lydfil[0].url}}">
+					<canvas id="freq"></canvas>
+					<span id="loading"></span>
+				</div>
 
+
+				<article class="text-block">
+					<h2 id="about">.about the music</h2>
+					{{entry.aboutTheMusic}}
+				</article>
+
+				{% if entry.events|length %}
+					<article class="text-block">
+						<h2 id="events">.upcoming events</h2>
+
+						{% for event in entry.events.event %}
+							<a href="/{{event.event_url}}" class="event" target="_blank">
+								<p>{{event.dato}}</p>
+								<p>{{event.navn}}</p>
+							</a>
+						{% endfor %}
+
+					</article>
+				{% endif %}
+
+
+				<article class="text-block" id="kontaktskjema">
+					<h2 id="contact">.contact</h2>
+					<p>Drop us a line!</p>
+					{{ craft.sproutForms.displayForm('contact') }}
+				</article>
+
+			</article>
 
 
 	{# {% endminify %}{% endcache %} #}
