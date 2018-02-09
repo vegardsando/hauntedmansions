@@ -46,8 +46,8 @@ body {
 #btn-startstop {
   position: absolute;
   position: fixed;
-  top: 12px;
-  right: 10px;
+  bottom: 36px;
+  right: 33px;
   z-index: 3;
   font-family: $font_default;
   color: #FFFFFF;
@@ -94,9 +94,9 @@ body {
 }
 
 .bandlogo {
-  margin-top: 10%;
+  margin-top: 7%;
   margin-left: 10%;
-  max-width: 570px;
+  max-width: 650px;
 
   &:hover {
     src:url('/static/img/HM logo-hover.svg');
@@ -136,7 +136,7 @@ body {
   a {
     color: #FFFFFF;
     font-weight: bold;
-    font-size: $h2;
+    font-size: $h3;
 
     &:hover {
       color: $color_pr3;
@@ -157,7 +157,7 @@ body {
 .text-block {
   padding-left: 10%;
   width: 60%;
-  font-size: 20px;
+  font-size: $basesize;
   margin-bottom: 100px;
 
   p {
@@ -167,6 +167,7 @@ body {
 
   h2 {
     padding-left: 30px;
+    margin-bottom: 8px;
   }
 
   &:nth-of-type(2) {

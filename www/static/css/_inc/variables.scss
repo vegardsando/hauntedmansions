@@ -28,8 +28,8 @@ $selection: $color_pr3;
 
 $huge: 108px;
 $h1: 70px;
-$h2: 45px;
-$h3: 38px;
+$h2: 60px;
+$h3: 42px;
 $h4: 18px;
 $basesize: 16px; 			/* MÅ VÆRE 16px */
 $h5: 14px;
@@ -104,14 +104,14 @@ h1, .h1 {
 }
 
 h2, .h2 {
-    font-size: $h3;
+    font-size: $h4;
 
 	@media #{$tablet} {
-		font-size: $h2;
+		font-size: $h3;
 	}
 
   @media #{$desktop} {
-		font-size: $h1;
+		font-size: $h2;
 	}
 }
 
