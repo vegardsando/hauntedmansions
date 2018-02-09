@@ -27,10 +27,11 @@ $customDbConfig = array(
 		'database' 	=> '_standard_craft'
 	),
 	'STAGE' => array(
-		'server' 	=> '',
-		'user' 		=> '',
-		'password' 	=> '',
-		'database' 	=> ''
+		'server' 	=> 'mysql193383.mysql.sysedata.no',
+		'user' 		=> 'mysql193383',
+		'password' 	=> 'Mester11',
+		'database' 	=> 'mysql193383',
+		'initSQLs' 	=> array("SET SESSION sql_mode='STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_AUTO_CREATE_USER,NO_ENGINE_SUBSTITUTION';")
 	),
 	'PROD' => array(
 		'server' 	=> 'mysql193383.mysql.sysedata.no',
