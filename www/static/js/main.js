@@ -101,46 +101,50 @@ if (typeof FastClick === 'function') { FastClick.attach(document.body); }
 
   })
 
+  $( ".swiper-wrapper" ).hover(
+    function() {
+      $('#backdropCurtain').addClass( "fadeIn" );
+    }, function() {
+      $('#backdropCurtain').removeClass( "fadeIn" );
+    }
+  );
+
+
+
   var hashTagActive = "";
-  var isHashonpage = "";
-      $(".scroll a").on("click touchstart" , function (event) {
-        isHashonpage = $(this.hash).length;
+  var $element = "";
+  // if hashtag already in URL
 
-        if (isHashonpage) {
-          event.preventDefault();
-          if(hashTagActive != this.hash) { //this will prevent if the user click several times the same link to freeze the scroll.
-              //calculate destination place
+  $(".scroll").on("click touchstart" , function (event) {
+      if(hashTagActive != this.hash) { //this will prevent if the user click several times the same link to freeze the scroll.
 
-              var dest = 0;
+          $element =  $(this).find('a').attr('href');
+          $element = $element.substring($element.indexOf("#"));
 
-              if ($(this.hash).offset().top > $(document).height() - $(window).height()) {
-                  dest = $(document).height() - $(window).height();
-              } else {
-                  dest = $(this.hash).offset().top - 70;
-              }
-              //go to destination
-              $('html,body').animate({
-                  scrollTop: dest
-              }, 1000, 'swing');
-              hashTagActive = this.hash;
-
+          if ($($element).length) {
+            event.preventDefault();
+            $element = $($element);
+            scrollToHash();
           }
-        }
 
+      }
+  });
 
-      });
-
-
-      $( ".swiper-wrapper" ).hover(
-        function() {
-          $('#backdropCurtain').addClass( "fadeIn" );
-        }, function() {
-          $('#backdropCurtain').removeClass( "fadeIn" );
-        }
-      );
-
-
-
+  function scrollToHash() {
+    //calculate destination place
+    console.log($element);
+    var dest = 0;
+    if ($element.offset().top > $(document).height() - $(window).height()) {
+        dest = $(document).height() - $(window).height();
+    } else {
+        dest = $element.offset().top;
+    }
+    //go to destination
+    $('html,body').animate({
+        scrollTop: dest - 50
+    }, 1000, 'swing');
+    hashTagActive = this.hash;
+  }
 
 
 /*=======================================================
