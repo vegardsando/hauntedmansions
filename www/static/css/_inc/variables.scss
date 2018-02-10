@@ -104,7 +104,11 @@ h1, .h1 {
 }
 
 h2, .h2 {
-  font-size: $h3;
+  font-size: $h4;
+
+  @media #{$tablet} {
+		font-size: $h3;
+	}
 
   @media #{$desktop} {
 		font-size: $h2;
