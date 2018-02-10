@@ -13,8 +13,8 @@
 				<div class="submenu">
 					{{ craft.amNav.getNav("mainMenu") }}
 					{% for knapp in footer.social %}
-						<a href="{{knapp.social_url}}" target="_blank">
-							<img class="social-icons" src="{{knapp.social_ikon[0].url}}">
+						<a class="social-icons" href="{{knapp.social_url}}" target="_blank">
+							<img src="{{knapp.social_ikon[0].url}}">
 						</a>
 					{% endfor %}
 				</div>

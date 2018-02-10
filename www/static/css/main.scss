@@ -177,26 +177,28 @@ body {
 }
 
 .social-icons {
-  max-width: 140px;
-  height: 35px;
+  color: black;
 
-  @media #{$desktop} {
-    max-width: 150px;
-    height: 45px;
-    transition: transform .3s ease-in-out;
-    transform:scale(0.95);
+  img {
+    max-width: 140px;
+    height: 35px;
 
-    &:hover {
-      transform:scale(1);
+    @media #{$desktop} {
+      max-width: 150px;
+      height: 45px;
+      transition: transform .3s ease-in-out;
+      transform:scale(0.95);
     }
   }
 
-  a:hover {
-    text-decoration: none;
+  &:hover {
+    text-decoration: none!important;
+    
+    img {
+      transform:scale(1);
+    }
+
   }
-
-
-
 }
 
 .text-block{
