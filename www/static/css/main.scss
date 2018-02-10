@@ -267,6 +267,14 @@ footer {
   }
 }
 
+.swiper-container {
+  margin-top: 20px;
+
+  &:hover {
+    cursor: pointer;
+  }
+}
+
 .bildetekst {
   position: absolute;
   top: 50%;
