@@ -70,7 +70,7 @@ if (typeof FastClick === 'function') { FastClick.attach(document.body); }
 
 	$html.addClass('lastet');
 
-  if ($(".visualizer").attr("data-lydfil")) {
+  if ($(".visualizer").attr("data-lydfil") && desktop == true ) {
     setTimeout(function(){
       lydfil = $(".visualizer").attr("data-lydfil");
       console.log(lydfil);

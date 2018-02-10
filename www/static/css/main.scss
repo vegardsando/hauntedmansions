@@ -60,6 +60,12 @@ body {
   font-size: 24px;
   font-weight: bold;
   width: 120px;
+  display: none;
+
+  @media #{$desktop} {
+		display: block;
+	}
+
 
   &:hover {
     text-decoration: line-through;
@@ -138,6 +144,16 @@ body {
       color: $color_pr3;
       text-decoration: line-through;
     }
+
+    @media #{$tablet} {
+  		font-size: $h4;
+  	}
+
+    @media #{$desktop} {
+  		font-size: $h3;
+  	}
+
+
   }
 
   li {
@@ -150,9 +166,7 @@ body {
   height: 80px;
 }
 
-.text-block {
-  padding-left: 10%;
-  width: 60%;
+.text-block{
   font-size: $basesize;
   margin-bottom: 100px;
 
@@ -173,7 +187,15 @@ body {
   &:nth-of-type(3) {
     padding-left: 8%;
   }
+}
 
+.text-block:not(.slideshow) {
+  padding-left: 10%;
+  width: 90%;
+
+  @media #{$tablet} {
+    width: 60%;
+  }
 }
 
 .event {

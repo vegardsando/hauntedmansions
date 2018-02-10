@@ -29,8 +29,8 @@ $selection: $color_pr3;
 $huge: 108px;
 $h1: 70px;
 $h2: 60px;
-$h3: 42px;
-$h4: 18px;
+$h3: 46px;
+$h4: 38px;
 $basesize: 16px; 			/* MÅ VÆRE 16px */
 $h5: 14px;
 $h6: 12px;
@@ -104,7 +104,7 @@ h1, .h1 {
 }
 
 h2, .h2 {
-    font-size: $h4;
+  font-size: $h4;
 
 	@media #{$tablet} {
 		font-size: $h3;
