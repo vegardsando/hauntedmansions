@@ -27,9 +27,6 @@ body {
   }
 
 
-
-
-
   h1 {
     color: #FFFFFF;
     font-size: 0;
@@ -270,6 +267,7 @@ footer {
   text-align: center;
   z-index: 1;
   position: relative;
+  font-size: $basesize;
 
   a {
     color: #FFFFFF;
