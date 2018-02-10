@@ -102,11 +102,15 @@ if (typeof FastClick === 'function') { FastClick.attach(document.body); }
   })
 
   var hashTagActive = "";
+  var isHashonpage = "";
       $(".scroll a").on("click touchstart" , function (event) {
+        isHashonpage = $(this.hash).length;
 
+        if (isHashonpage) {
+          event.preventDefault();
           if(hashTagActive != this.hash) { //this will prevent if the user click several times the same link to freeze the scroll.
-              event.preventDefault();
               //calculate destination place
+
               var dest = 0;
 
               if ($(this.hash).offset().top > $(document).height() - $(window).height()) {
@@ -119,9 +123,11 @@ if (typeof FastClick === 'function') { FastClick.attach(document.body); }
                   scrollTop: dest
               }, 1000, 'swing');
               hashTagActive = this.hash;
-          } else {
 
           }
+        }
+
+
       });
 
 
