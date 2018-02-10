@@ -12,11 +12,6 @@
 				</a>
 				<div class="submenu">
 					{{ craft.amNav.getNav("mainMenu") }}
-					{% for knapp in footer.social %}
-						<a class="social-icons" href="{{knapp.social_url}}" target="_blank">
-							<img src="{{knapp.social_ikon[0].url}}">
-						</a>
-					{% endfor %}
 				</div>
 
 				<div class="visualizer" data-lydfil="{{entry.lydfil[0].url}}">

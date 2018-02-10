@@ -182,18 +182,30 @@ body {
   }
 }
 
-.social-icons {
-  color: black;
-  display: block;
+.social-section {
   text-align: center;
-  margin-bottom: 7px;
+
+  @media #{$desktop} {
+    position: fixed;
+    top: 20%;
+    right: 20px;
+  }
+
+}
+
+.social-icons {
+  display: inline-block;
+  margin-bottom: 0px;
+  padding: 10px;
 
   @media #{$tablet} {
-    display: inline-block;
+
   }
 
   @media #{$desktop} {
-
+    display: block;
+    text-align: center;
+    margin-bottom: 7px;
   }
 
   img {
@@ -201,8 +213,8 @@ body {
     height: 35px;
 
     @media #{$desktop} {
-      max-width: 150px;
-      height: 45px;
+      max-width: 130px;
+      height: 40px;
       transition: transform .3s ease-in-out;
       transform:scale(0.95);
     }
