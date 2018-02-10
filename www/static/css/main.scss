@@ -183,11 +183,19 @@ body {
   @media #{$desktop} {
     max-width: 150px;
     height: 45px;
+    transition: transform .3s ease-in-out;
+    transform:scale(0.95);
+
+    &:hover {
+      transform:scale(1);
+    }
   }
 
   a:hover {
     text-decoration: none;
   }
+
+
 
 }
 
