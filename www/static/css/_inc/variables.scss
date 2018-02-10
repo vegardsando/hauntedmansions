@@ -31,8 +31,8 @@ $h1: 70px;
 $h2: 60px;
 $h3: 46px;
 $h4: 38px;
+$h5: 28px;
 $basesize: 16px; 			/* MÅ VÆRE 16px */
-$h5: 14px;
 $h6: 12px;
 $h7: 10px;
 
@@ -104,11 +104,7 @@ h1, .h1 {
 }
 
 h2, .h2 {
-  font-size: $h4;
-
-	@media #{$tablet} {
-		font-size: $h3;
-	}
+  font-size: $h3;
 
   @media #{$desktop} {
 		font-size: $h2;

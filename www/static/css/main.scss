@@ -100,16 +100,21 @@ body {
 }
 
 .bandlogo {
-  margin-top: 7%;
+  margin-top: 20%;
   margin-left: 10%;
   max-width: 650px;
+
+  @media #{$tablet} {
+    margin-top: 7%;
+  }
+
+
 }
 
 .submenu {
-
   z-index: 1;
   position: relative;
-  margin-bottom: 190px;
+  margin-bottom: 80px;
   padding-left: 30px;
   width: 95%;
   max-width: 560px;
@@ -126,11 +131,13 @@ body {
   @media #{$tablet} {
 		width: 65%;
     padding-left: 50px;
+    margin-bottom: 140px;
 	}
 
   @media #{$desktop} {
 		width: 55%;
     padding-left: 100px;
+    margin-bottom: 190px;
 	}
 
 
@@ -138,7 +145,7 @@ body {
   a {
     color: #FFFFFF;
     font-weight: bold;
-    font-size: $h3;
+    font-size: $h5;
 
     &:hover {
       color: $color_pr3;
