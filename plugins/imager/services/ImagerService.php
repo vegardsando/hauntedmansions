@@ -11,8 +11,6 @@ namespace Craft;
  * @link        https://github.com/aelvan/Imager-Craft
  */
 
-use Tinify;
-
 class ImagerService extends BaseApplicationComponent
 {
     var $imageDriver = 'gd';
@@ -43,6 +41,7 @@ class ImagerService extends BaseApplicationComponent
       'instanceReuseEnabled' => 'REUSE',
       'watermark' => 'WM',
       'letterbox' => 'LB',
+      'frames' => 'FR',
     );
 
     // translate dictionary for resize method 
@@ -79,7 +78,7 @@ class ImagerService extends BaseApplicationComponent
     public static $compositeKeyTranslate = array();
 
     // translate dictionary for translating crafts built in position constants into relative format (width/height offset) 
-    public static $craftPositonTranslate = array(
+    public static $craftPositionTranslate = array(
       'top-left' => '0% 0%',
       'top-center' => '50% 0%',
       'top-right' => '100% 0%',
@@ -114,7 +113,7 @@ class ImagerService extends BaseApplicationComponent
 
         $this->imagineInstance = $this->_createImagineInstance();
 
-        if ($this->imageDriver == 'imagick') {
+        if ($this->imageDriver === 'imagick') {
             ImagerService::$compositeKeyTranslate['blend'] = \imagick::COMPOSITE_BLEND;
             ImagerService::$compositeKeyTranslate['darken'] = \imagick::COMPOSITE_DARKEN;
             ImagerService::$compositeKeyTranslate['lighten'] = \imagick::COMPOSITE_LIGHTEN;
@@ -137,21 +136,93 @@ class ImagerService extends BaseApplicationComponent
     {
         if ($this->imageDriver === 'gd') {
             return new \Imagine\Gd\Imagine();
-        } else {
-            if ($this->imageDriver === 'imagick') {
-                return new \Imagine\Imagick\Imagine();
-            }
         }
+        
+        if ($this->imageDriver === 'imagick') {
+            return new \Imagine\Imagick\Imagine();
+        }
+        
+        return null;
     }
 
 
     /**
+     * Remove transforms for a given asset
+     *
+     * @param AssetFileModel $asset
+     */
+    public function removeTransformsForAsset(AssetFileModel $asset)
+    {
+        $paths = new Imager_ImagePathsModel($asset);
+
+        if (strpos($paths->targetPath, craft()->imager->getSetting('imagerSystemPath')) !== false) {
+            IOHelper::clearFolder($paths->targetPath);
+            craft()->templateCache->deleteCachesByElementId($asset->id);
+
+            if ($paths->isRemote) {
+                IOHelper::deleteFile($paths->sourcePath . $paths->sourceFilename);
+            }
+        }
+    }
+
+    /**
+     * Clear all image transforms caches
+     */
+    public function deleteImageTransformCaches()
+    {
+        IOHelper::clearFolder(craft()->imager->getSetting('imagerSystemPath'));
+    }
+
+    /**
+     * Clear all remote image caches
+     */
+    public function deleteRemoteImageCaches()
+    {
+        IOHelper::clearFolder(craft()->path->getRuntimePath() . 'imager/');
+    }
+    
+    public function srcset($images, $descriptor = 'w')
+    {
+        $r = '';
+        $generated = array();
+        
+        if (!is_array($images)) {
+            return '';
+        }
+
+        foreach ($images as $image) {
+            switch ($descriptor) {
+                case 'w':
+                    if (!isset($generated[$image->getWidth()])) {
+                        $r .= $image->getUrl().' '.$image->getWidth().'w, ';
+                        $generated[$image->getWidth()] = true;
+                    }
+                    break;
+                case 'h':
+                    if (!isset($generated[$image->getHeight()])) {
+                        $r .= $image->getUrl().' '.$image->getHeight().'h, ';
+                        $generated[$image->getHeight()] = true;
+                    }
+                    break;
+                case 'w+h':
+                    if (!isset($generated[$image->getWidth() . 'x' . $image->getHeight()])) {
+                        $r .= $image->getUrl().' '.$image->getWidth().'w ' .$image->getHeight().'h, ';
+                        $generated[$image->getWidth() . 'x' . $image->getHeight()] = true;
+                    }
+                    break;
+            }
+        }
+        
+        return substr($r, 0, strlen($r) - 2);
+    }
+    
+    /**
      * Do an image transform
      *
      * @param AssetFileModel|string $image
-     * @param Array $transform
-     * @param Array $transformDefaults
-     * @param Array $configOverrides
+     * @param array $transform
+     * @param array $transformDefaults
+     * @param array $configOverrides
      *
      * @throws Exception
      * @return array|Image
@@ -161,9 +232,37 @@ class ImagerService extends BaseApplicationComponent
         if (!$image) {
             return null; // there's nothing to see here, move along.
         }
-
+        
+        // create config model
         $this->configModel = new Imager_ConfigModel($configOverrides);
+        
+        // Fill missing transforms if fillTransforms is enabled
+        if (craft()->imager->getSetting('fillTransforms')===true)
+        {
+            if (is_array($transform) && count($transform)>1) {
+                $transform = $this->_fillTransforms($transform);
+            }
+        }
+
+        // if imgix is enabled this is a totally different ballgame
+        if (craft()->imager->getSetting('imgixEnabled')) {
+            $r = null;
+
+            if (isset($transform[0])) {
+                foreach ($transform as $t) {
+                    $r[] = craft()->imager_imgix->getTransformedImage($image, $transformDefaults != null ? array_merge($transformDefaults, $t) : $t);
+                }
+            } else {
+                    $r = craft()->imager_imgix->getTransformedImage($image, $transformDefaults != null ? array_merge($transformDefaults, (array)$transform) : $transform);
+            }
+            
+            return $r;
+        }
+        
+        // get pathsmodel for image
         $pathsModel = new Imager_ImagePathsModel($image);
+
+        // create imagine instance
         $this->imagineInstance = $this->_createImagineInstance();
 
         /**
@@ -229,8 +328,7 @@ class ImagerService extends BaseApplicationComponent
                 throw new Exception($msg);
             }    
         }
-
-
+        
         /**
          * Transform can be either an array or just an object.
          * Act accordingly and return the results the same way to the template.
@@ -266,12 +364,52 @@ class ImagerService extends BaseApplicationComponent
         return $r;
     }
 
+    /**
+     * Fills in the missing transform objects
+     * 
+     * @param array $transforms
+     * @return array
+     */
+    private function _fillTransforms($transforms) {
+        $r = array();
+        
+        $attributeName = craft()->imager->getSetting('fillAttribute');
+        $interval = craft()->imager->getSetting('fillInterval');
+        
+        $r[] = $transforms[0];
+        
+        for ($i = 1, $l = count($transforms); $i<$l; $i++) {
+            $prevTransform = $transforms[$i-1];
+            $currentTransform = $transforms[$i];
+            
+            if (isset($prevTransform[$attributeName]) && isset($currentTransform[$attributeName])) {
+                if ($prevTransform[$attributeName] < $currentTransform[$attributeName]) {
+                    for($num = $prevTransform[$attributeName] + $interval, $maxNum = $currentTransform[$attributeName]; $num<$maxNum; $num = $num + $interval) {
+                        $transformCopy = $prevTransform;
+                        $transformCopy[$attributeName] = $num;
+                        $r[] = $transformCopy;
+                    }
+                } else {
+                    for($num = $prevTransform[$attributeName] - $interval, $minNum = $currentTransform[$attributeName]; $num>$minNum; $num = $num - $interval) {
+                        $transformCopy = $prevTransform;
+                        $transformCopy[$attributeName] = $num;
+                        $r[] = $transformCopy;
+                    }
+                }
+            }
+            
+            $r[] = $currentTransform;
+        }
+        
+        return $r;
+    }
+
 
     /**
      * Loads an image from a file system path, do transform, return transformed image as an Imager_ImageModel
      *
      * @param Imager_ImagePathsModel $paths
-     * @param Array $transform
+     * @param array $transform
      *
      * @throws Exception
      * @return Imager_ImageModel
@@ -299,12 +437,15 @@ class ImagerService extends BaseApplicationComponent
         }
 
         // normalize the transform before doing anything more 
-        $transform = $this->_normalizeTransform($transform, $paths);
+        $transform = $this->normalizeTransform($transform, $paths);
 
         // create target filename, path and url
         $targetFilename = $this->_createTargetFilename($filename, $targetExtension, $transform);
         $targetFilePath = $paths->targetPath . $targetFilename;
         $targetFileUrl = $paths->targetUrl . $targetFilename;
+
+        // set save options
+        $saveOptions = $this->_getSaveOptions($targetExtension, $transform);
 
         /**
          * Check if the image already exists, if caching is turned on or if the cache has expired.
@@ -318,65 +459,78 @@ class ImagerService extends BaseApplicationComponent
             if (!$this->getSetting('instanceReuseEnabled', $transform) || $this->imageInstance == null) {
                 $this->imageInstance = $this->imagineInstance->open($paths->sourcePath . $paths->sourceFilename);
             }
-
-            // Apply any pre resize filters
-            if (isset($transform['preEffects'])) {
-                $this->_applyImageEffects($this->imageInstance, $transform['preEffects']);
+            
+            // check if this is an animated gif and we're using Imagick
+            $animated = false;
+            
+            if ($sourceExtension === 'gif')
+            {
+                if ($this->imageDriver!=='gd' && $this->imageInstance->layers())
+                {
+                    $animated = true;
+                }
             }
+            
+            // Run tranforms, either on each layer of an animated gif, or on the whole image.
+            if ($animated) {
+                $this->imageInstance->layers()->coalesce();
+                
+                // we need to create a new image instance with the target size, or letterboxing will be wrong.
+                $originalSize = $this->imageInstance->getSize();
+                $resizeSize = $this->getResizeSize($originalSize, $transform);
+                $layers = $this->imageInstance->layers();
+                $gif = $this->imagineInstance->create($resizeSize);
+                $gif->layers()->remove(0);
+                
+                $startFrame = 0;
+                $endFrame = count($layers)-1; 
+                $interval = 1; 
 
-            // Do the resize
-            $originalSize = $this->imageInstance->getSize();
-            $cropSize = $this->getCropSize($originalSize, $transform);
-            $resizeSize = $this->getResizeSize($originalSize, $transform);
-            $saveOptions = $this->_getSaveOptions($targetExtension, $transform);
-            $filterMethod = $this->_getFilterMethod($transform);
+                if (isset($transform['frames'])) {
+                    $framesIntArr = explode('@', $transform['frames']);
+                    
+                    if (count($framesIntArr)>1) {
+                        $interval = $framesIntArr[1];
+                    }
+                    
+                    $framesArr = explode('-', $framesIntArr[0]);
+                    
+                    if (count($framesArr)>1) {
+                        $startFrame = $framesArr[0];
+                        if ($framesArr[1]!=='*') {
+                            $endFrame = $framesArr[1];
+                        }
+                    } else {
+                        $startFrame = $framesArr[0];
+                        $endFrame = $framesArr[0];
+                    }
+                    
+                    if ($endFrame>count($layers)-1) {
+                        $endFrame = count($layers)-1;
+                    }
+                } 
+                
+                for ($i=$startFrame; $i<=$endFrame; $i+=$interval)
+                {
+                    $layer = $layers[$i];
+                    $this->_transformLayer($layer, $transform, $sourceExtension, $targetExtension);
+    				$gif->layers()->add($layer);
+                }
+                
+    			$this->imageInstance = $gif;
 
-            if ($this->imageDriver == 'imagick' && $this->getSetting('smartResizeEnabled', $transform) && version_compare(craft()->getVersion(), '2.5', '>=')) {
-                $this->imageInstance->smartResize($resizeSize, (bool)craft()->config->get('preserveImageColorProfiles'), $this->getSetting('jpegQuality', $transform));
             } else {
-                $this->imageInstance->resize($resizeSize, $filterMethod);
+                $this->_transformLayer($this->imageInstance, $transform, $sourceExtension, $targetExtension);
             }
-
-            // If Image Driver is imagick and removeMetadata is true
-            // remove Metadata to reduce the image size by a significant amount
-            if ($this->imageDriver == 'imagick' && $this->getSetting('removeMetadata', $transform)) {
+            
+            // If Image Driver is imagick and removeMetadata is true, remove meta data
+            if ($this->imageDriver === 'imagick' && $this->getSetting('removeMetadata', $transform)) {
                 $this->imageInstance->strip();
             }
 
-            if (!isset($transform['mode']) || mb_strtolower($transform['mode']) == 'crop' || mb_strtolower($transform['mode']) == 'croponly') {
-                $cropPoint = $this->_getCropPoint($resizeSize, $cropSize, $transform);
-                $this->imageInstance->crop($cropPoint, $cropSize);
-            }
-
-            // letterbox, add padding
-            if (isset($transform['mode']) && mb_strtolower($transform['mode']) == 'letterbox') {
-                $this->_applyLetterbox($this->imageInstance, $transform);
-            }
-
-            // Apply post resize filters
-            if (isset($transform['effects'])) {
-                $this->_applyImageEffects($this->imageInstance, $transform['effects']);
-            }
-
-            // Interlace if true
-            if ($this->getSetting('interlace', $transform)) {
-                $interlaceVal = $this->getSetting('interlace', $transform);
-
-                if (is_string($interlaceVal)) {
-                    $this->imageInstance->interlace(ImagerService::$interlaceKeyTranslate[$interlaceVal]);
-                } else {
-                    $this->imageInstance->interlace(ImagerService::$interlaceKeyTranslate['line']);
-                }
-            }
-
-            // apply watermark if enabled
-            if (isset($transform['watermark'])) {
-                $this->_applyWatermark($this->imageInstance, $transform['watermark']);
-            }
-
-            // apply background color if enabled and applicable
-            if (($sourceExtension != $targetExtension) && ($sourceExtension != 'jpg') && ($targetExtension == 'jpg') && ($this->getSetting('bgColor', $transform) != '')) {
-                $this->_applyBackgroundColor($this->imageInstance, $this->getSetting('bgColor', $transform));
+            // Convert the image to RGB before converting to webp/saving
+            if ($this->getSetting('convertToRGB', $transform)) {
+                $this->imageInstance->usePalette(new \Imagine\Image\Palette\RGB());
             }
 
             // save the transform
@@ -393,7 +547,7 @@ class ImagerService extends BaseApplicationComponent
 
             // if file was created, check if optimization should be done
             if (IOHelper::fileExists($targetFilePath)) {
-                if ($targetExtension == 'jpg' || $targetExtension == 'jpeg') {
+                if ($targetExtension === 'jpg' || $targetExtension === 'jpeg') {
                     if ($this->getSetting('jpegoptimEnabled', $transform)) {
                         $this->postOptimize('jpegoptim', $targetFilePath);
                     }
@@ -405,12 +559,18 @@ class ImagerService extends BaseApplicationComponent
                     }
                 }
 
-                if ($targetExtension == 'png') {
+                if ($targetExtension === 'png') {
                     if ($this->getSetting('optipngEnabled', $transform)) {
                         $this->postOptimize('optipng', $targetFilePath);
                     }
                     if ($this->getSetting('pngquantEnabled', $transform)) {
                         $this->postOptimize('pngquant', $targetFilePath);
+                    }
+                }
+
+                if ($targetExtension === 'gif') {
+                    if ($this->getSetting('gifsicleEnabled', $transform)) {
+                        $this->postOptimize('gifsicle', $targetFilePath);
                     }
                 }
 
@@ -420,13 +580,18 @@ class ImagerService extends BaseApplicationComponent
 
                 // Upload to AWS if enabled
                 if ($this->getSetting('awsEnabled')) {
-                    craft()->imager_aws->uploadToAWS($targetFilePath);
+                    craft()->imager_aws->uploadToAWS($targetFilePath, $this->_checkIsFinalVersion($transform));
 
                     // Invalidate cloudfront distribution if enabled
                     if ($this->getSetting('cloudfrontInvalidateEnabled')) {
                         $parsedUrl = parse_url($targetFileUrl);
                         $this->invalidatePaths[] = $parsedUrl['path'];
                     }
+                }
+
+                // if GCS is enabled, upload file
+                if (craft()->imager->getSetting('gcsEnabled')) {
+                    craft()->imager_gcs->uploadToGCS($targetFilePath, $this->_checkIsFinalVersion($transform));
                 }
             }
         }
@@ -438,40 +603,71 @@ class ImagerService extends BaseApplicationComponent
     }
 
     /**
-     * Remove transforms for a given asset
-     *
-     * @param AssetFileModel $asset
+     * Apply transforms to an image or layer.
+     * 
+     * @param $layer
+     * @param array $transform
+     * @param string $sourceExtension
+     * @param string $targetExtension
      */
-    public function removeTransformsForAsset(AssetFileModel $asset)
+    private function _transformLayer(&$layer, $transform, $sourceExtension, $targetExtension)
     {
-        $paths = new Imager_ImagePathsModel($asset);
+        // Apply any pre resize filters
+        if (isset($transform['preEffects'])) {
+            $this->_applyImageEffects($layer, $transform['preEffects']);
+        }
 
-        if (strpos($paths->targetPath, craft()->imager->getSetting('imagerSystemPath')) !== false) {
-            IOHelper::clearFolder($paths->targetPath);
-            craft()->templateCache->deleteCachesByElementId($asset->id);
+        // Get size and crop information
+        $originalSize = $layer->getSize();
+        $cropSize = $this->getCropSize($originalSize, $transform);
+        $resizeSize = $this->getResizeSize($originalSize, $transform);
+        $filterMethod = $this->_getFilterMethod($transform);
 
-            if ($paths->isRemote) {
-                IOHelper::deleteFile($paths->sourcePath . $paths->sourceFilename);
+        // Do the resize
+        if ($this->imageDriver === 'imagick' && $this->getSetting('smartResizeEnabled', $transform) && version_compare(craft()->getVersion(), '2.5', '>=')) {
+            $layer->smartResize($resizeSize, (bool)craft()->config->get('preserveImageColorProfiles'), $this->getSetting('jpegQuality', $transform));
+        } else {
+            $layer->resize($resizeSize, $filterMethod);
+        }
+
+        // Do the crop
+        if (!isset($transform['mode']) || mb_strtolower($transform['mode']) === 'crop' || mb_strtolower($transform['mode']) === 'croponly') {
+            $cropPoint = $this->_getCropPoint($resizeSize, $cropSize, $transform);
+            $layer->crop($cropPoint, $cropSize);
+        }
+
+        // letterbox, add padding
+        if (isset($transform['mode']) && mb_strtolower($transform['mode']) === 'letterbox') {
+            $this->_applyLetterbox($layer, $transform);
+        }
+
+        // Apply post resize filters
+        if (isset($transform['effects'])) {
+            $this->_applyImageEffects($layer, $transform['effects']);
+        }
+
+        // Interlace if true
+        if ($this->getSetting('interlace', $transform)) {
+            $interlaceVal = $this->getSetting('interlace', $transform);
+
+            if (is_string($interlaceVal)) {
+                $layer->interlace(ImagerService::$interlaceKeyTranslate[$interlaceVal]);
+            } else {
+                $layer->interlace(ImagerService::$interlaceKeyTranslate['line']);
             }
         }
-    }
 
-    /**
-     * Clear all image transforms caches
-     */
-    public function deleteImageTransformCaches()
-    {
-        IOHelper::clearFolder(craft()->imager->getSetting('imagerSystemPath'));
-    }
+        // apply watermark if enabled
+        if (isset($transform['watermark'])) {
+            $this->_applyWatermark($layer, $transform['watermark']);
+        }
 
-    /**
-     * Clear all remote image caches
-     */
-    public function deleteRemoteImageCaches()
-    {
-        IOHelper::clearFolder(craft()->path->getRuntimePath() . 'imager/');
+        // apply background color if enabled and applicable
+        if (($sourceExtension !== $targetExtension) && ($sourceExtension !== 'jpg') && ($targetExtension === 'jpg') && ($this->getSetting('bgColor', $transform) !== '')) {
+            $this->_applyBackgroundColor($layer, $this->getSetting('bgColor', $transform));
+        }
     }
-
+    
     /**
      * Creates the target filename
      *
@@ -511,7 +707,7 @@ class ImagerService extends BaseApplicationComponent
      * @param $transform
      * @return mixed
      */
-    private function _normalizeTransform($transform, $paths = null)
+    public function normalizeTransform($transform, $paths = null)
     {
         // if resize mode is not crop or croponly, remove position
         if (isset($transform['mode']) && (($transform['mode'] != 'crop') && ($transform['mode'] != 'croponly'))) {
@@ -551,15 +747,15 @@ class ImagerService extends BaseApplicationComponent
             }
         }
 
-        // remove format, this is already in the extension
-        if (isset($transform['format'])) {
+        // remove format, this is already in the extension, if we have
+        if (isset($transform['format']) && $paths !== null) {
             unset($transform['format']);
         }
 
         // if transform is in Craft's named version, convert to percentage
         if (isset($transform['position'])) {
-            if (isset(ImagerService::$craftPositonTranslate[$transform['position']])) {
-                $transform['position'] = ImagerService::$craftPositonTranslate[$transform['position']];
+            if (isset(ImagerService::$craftPositionTranslate[$transform['position']])) {
+                $transform['position'] = ImagerService::$craftPositionTranslate[$transform['position']];
             }
 
             $transform['position'] = str_replace('%', '', $transform['position']);
@@ -594,7 +790,18 @@ class ImagerService extends BaseApplicationComponent
             if ($k == 'effects' || $k == 'preEffects') {
                 $effectString = '';
                 foreach ($v as $eff => $param) {
-                    $effectString .= '_' . $eff . '-' . (is_array($param) ? implode("-", $param) : $param);
+                    if (is_array($param)) {
+                        if (is_array($param[0])) {
+                            $effectString .= '_' . $eff;
+                            foreach ($param as $paramArr) {
+                                $effectString .= '-' . implode('-', $paramArr);
+                            }
+                        } else {
+                            $effectString .= '_' . $eff . '-' . implode('-', $param);
+                        }
+                    } else {
+                        $effectString .= '_' . $eff . '-' . $param;
+                    }
                 }
 
                 $r .= '_' . (isset(ImagerService::$transformKeyTranslate[$k]) ? ImagerService::$transformKeyTranslate[$k] : $k) . $effectString;
@@ -621,7 +828,7 @@ class ImagerService extends BaseApplicationComponent
             }
         }
 
-        return str_replace(array('#', '(', ')'), '', str_replace(array(' ', '.'), '-', $r));
+        return str_replace(array('#', '(', ')'), '', str_replace(array(' ', '.', ','), '-', $r));
     }
 
 
@@ -657,7 +864,11 @@ class ImagerService extends BaseApplicationComponent
         if (!$this->getSetting('allowUpscale', $transform)) {
             list($width, $height) = $this->_enforceMaxSize($width, $height, $originalSize, true);
         }
-
+        
+        // ensure that size is larger than 0
+        if ($width<=0) { $width = 1; }
+        if ($height<=0) { $height = 1; }
+        
         return new \Imagine\Image\Box($width, $height);
     }
 
@@ -695,8 +906,11 @@ class ImagerService extends BaseApplicationComponent
                     }
 
                 } else {
-
-                    if ($transformAspect > $aspect) { // use height as guide
+                    
+                    if ($transformAspect === $aspect) {
+                        $height = (int)$transform['height'];
+                        $width = (int)$transform['width'];
+                    } elseif ($transformAspect > $aspect) { // use height as guide
                         $height = (int)$transform['height'];
                         $width = ceil($originalSize->getWidth() * ($height / $originalSize->getHeight()));
                     } else { // use width
@@ -801,18 +1015,21 @@ class ImagerService extends BaseApplicationComponent
      */
     private function _getCropPoint($resizeSize, $cropSize, $transform)
     {
-        // find the "area of opportunity", the difference between the resized image size and the crop size
-        $wDiff = $resizeSize->getWidth() - $cropSize->getWidth();
-        $hDiff = $resizeSize->getHeight() - $cropSize->getHeight();
-
         // get default crop position from the settings
         $position = $this->getSetting('position', $transform);
 
         // get the offsets, left and top, now as an int, representing the % offset
         list($leftOffset, $topOffset) = explode(' ', $position);
-
-        // calculate and return the point
-        return new \Imagine\Image\Point(floor($wDiff * ($leftOffset / 100)), floor($hDiff * ($topOffset / 100)));
+        
+        // get position that crop should center around
+        $leftPos = floor($resizeSize->getWidth() * ($leftOffset / 100)) - floor($cropSize->getWidth()/2);
+        $topPos = floor($resizeSize->getHeight() * ($topOffset / 100)) - floor($cropSize->getHeight()/2);
+        
+        // make sure the point is within the boundaries and return the point
+        return new \Imagine\Image\Point(
+            min(max($leftPos, 0), ($resizeSize->getWidth() - $cropSize->getWidth())), 
+            min(max($topPos, 0), ($resizeSize->getHeight() - $cropSize->getHeight()))
+        );
     }
 
 
@@ -1017,8 +1234,14 @@ class ImagerService extends BaseApplicationComponent
                 $instance = $imageInstance->getImagick();
 
                 $instance->setImageFormat('webp');
-                $instance->setImageAlphaChannel(\Imagick::ALPHACHANNEL_ACTIVATE);
-                $instance->setBackgroundColor(new \ImagickPixel('transparent'));
+                
+                $hasTransparency = $instance->getImageAlphaChannel();
+
+                if($hasTransparency){
+                    $instance->setImageAlphaChannel(\Imagick::ALPHACHANNEL_ACTIVATE);
+                    $instance->setBackgroundColor(new \ImagickPixel('transparent'));
+                }
+                
                 $instance->setImageCompressionQuality($saveOptions['webp_quality']);
 
                 $imagickOptions = $saveOptions['webp_imagick_options'];
@@ -1109,37 +1332,76 @@ class ImagerService extends BaseApplicationComponent
 
             $effect = mb_strtolower($effect);
 
-            if ($effect == 'grayscale' || $effect == 'greyscale') { // we do not participate in that quarrel
-                $imageInstance->effects()->grayscale();
-            }
+            /**
+             * For GD we only apply effects that exists in Imagine
+             */
+            if ($this->imageDriver === 'gd') {
+                if (($effect == 'grayscale' || $effect == 'greyscale') && $value) { 
+                    $imageInstance->effects()->grayscale();
+                }
 
-            if ($effect == 'negative') {
-                $imageInstance->effects()->negative();
-            }
+                if ($effect == 'negative' && $value) {
+                    $imageInstance->effects()->negative();
+                }
 
-            if ($effect == 'blur') {
-                $imageInstance->effects()->blur(is_int($value) || is_float($value) ? $value : 1);
-            }
+                if ($effect == 'blur') {
+                    $imageInstance->effects()->blur(is_int($value) || is_float($value) ? $value : 1);
+                }
 
-            if ($effect == 'sharpen') {
-                $imageInstance->effects()->sharpen();
-            }
+                if ($effect == 'sharpen' && $value) {
+                    $imageInstance->effects()->sharpen();
+                }
 
-            if ($effect == 'gamma') {
-                $imageInstance->effects()->gamma(is_int($value) || is_float($value) ? $value : 1);
-            }
+                if ($effect == 'gamma') {
+                    $imageInstance->effects()->gamma(is_int($value) || is_float($value) ? $value : 1);
+                }
 
-            if ($effect == 'colorize') {
-                $color = $imageInstance->palette()->color($value);
-                $imageInstance->effects()->colorize($color);
+                if ($effect == 'colorize') {
+                    $color = $imageInstance->palette()->color($value);
+                    $imageInstance->effects()->colorize($color);
+                }
             }
 
             /**
-             * Effects that are imagick only. Will be ignored if GD is used
+             * For Imagick, we apply all effects manually. 
+             * Built-in effects in Imagine is not used since they don't work with animated gif layers.
              */
             if ($this->imageDriver == 'imagick') {
                 $imagickInstance = $imageInstance->getImagick();
+                
+                if (($effect === 'grayscale' || $effect === 'greyscale') && $value) {
+                    $hasTransparency = $imagickInstance->getImageAlphaChannel();
 
+                    $imagickInstance->setImageType(\Imagick::IMGTYPE_GRAYSCALE);
+                    
+                    if($hasTransparency){
+                        $imagickInstance->setImageAlphaChannel(\Imagick::ALPHACHANNEL_ACTIVATE);
+                        $imagickInstance->setBackgroundColor(new \ImagickPixel('transparent'));
+                    }                
+                }
+
+                if ($effect === 'negative' && $value) {
+                    $imagickInstance->negateImage(false, \Imagick::CHANNEL_ALL);
+                }
+
+                if ($effect === 'blur') {
+                    $imagickInstance->gaussianBlurImage(0, is_int($value) || is_float($value) ? $value : 1);
+                }
+
+                if ($effect === 'sharpen' && $value) {
+                    $imagickInstance->sharpenImage(2, 1);
+                }
+
+                if ($effect === 'gamma') {
+                    $imagickInstance->gammaImage(is_int($value) || is_float($value) ? $value : 1, \Imagick::CHANNEL_ALL);
+                }
+
+                if ($effect === 'colorize') {
+                    $color = $imageInstance->palette()->color($value);
+                    $imagickInstance = $imageInstance->getImagick();
+                    $imagickInstance->colorizeImage((string)$color, new \ImagickPixel(sprintf('rgba(%d, %d, %d, 1)', $color->getRed(), $color->getGreen(), $color->getBlue())));
+                }
+                
                 // colorBlend is almost like colorize, but works with alpha and use blend modes.
                 if ($effect == 'colorblend') {
 
@@ -1207,6 +1469,38 @@ class ImagerService extends BaseApplicationComponent
                 if ($effect == 'unsharpmask' && is_array($value) && count($value) == 4) {
                     $imagickInstance->unsharpMaskImage($value[0], $value[1], $value[2], $value[3]);
                 }
+                
+                // clut
+                if ($effect == 'clut' && is_string($value)) {
+                    $clut = new \Imagick();
+                    $clut->newPseudoImage(1, 255, $value);
+                    $imagickInstance->clutImage($clut);
+                }
+
+                // levels
+                if ($effect == 'levels' && is_array($value)) {
+                    if (is_array($value[0])) {
+                        foreach ($value as $val) {
+                            if (count($val)>=3) {
+                                $this->_applyLevels($imagickInstance, $val);
+                            }
+                        }
+                    } else {
+                        if (count($value)>=3) {
+                            $this->_applyLevels($imagickInstance, $value);
+                        }
+                    }
+                    
+                }
+
+                // quantize
+                if ($effect == 'quantize' && (is_array($value) || is_int($value))) {
+                    if (is_array($value) && count($value) === 3) {
+                        $imagickInstance->quantizeImage($value[0], \Imagick::COLORSPACE_RGB, $value[1], $value[2], false);
+                    } else {
+                        $imagickInstance->quantizeImage($value, \Imagick::COLORSPACE_RGB, 0, false, false);
+                    }
+                }
 
                 // vignette
                 // todo : make a better vignette
@@ -1257,6 +1551,28 @@ class ImagerService extends BaseApplicationComponent
 
     }
 
+    private function _applyLevels($imagickInstance, $value) {
+        $quantum = $imagickInstance->getQuantum();
+        $blackLevel = ($value[0]/255)*$quantum;
+        $whiteLevel = ($value[2]/255)*$quantum;
+        $channel = \Imagick::CHANNEL_ALL;
+        
+        if (count($value)>3) {
+            switch ($value[3]) {
+                case 'red':
+                    $channel = \Imagick::CHANNEL_RED;
+                    break;
+                case 'blue':
+                    $channel = \Imagick::CHANNEL_BLUE;
+                    break;
+                case 'green':
+                    $channel = \Imagick::CHANNEL_GREEN;
+                    break;
+            }
+        }
+        
+        $imagickInstance->levelImage($blackLevel, $value[1], $whiteLevel, $channel);
+    }
 
     /**
      * Color blend filter, more advanced version of colorize.
@@ -1284,15 +1600,24 @@ class ImagerService extends BaseApplicationComponent
         $temporary->setImageFormat('png32');
         $temporary->drawImage($draw);
 
-        $alphaChannel = clone $imagickInstance;
-        $alphaChannel->setImageAlphaChannel(\Imagick::ALPHACHANNEL_EXTRACT);
-        $alphaChannel->negateImage(false, \Imagick::CHANNEL_ALL);
-        $imagickInstance->setImageClipMask($alphaChannel);
+        if (method_exists($imagickInstance, 'setImageClipMask')) { // ImageMagick < 7
+            $alphaChannel = clone $imagickInstance;
+            $alphaChannel->setImageAlphaChannel(\Imagick::ALPHACHANNEL_EXTRACT);
+            $alphaChannel->negateImage(false, \Imagick::CHANNEL_ALL);
+            $imagickInstance->setImageClipMask($alphaChannel);
+        } else {
+            // need to figure out how to add support for maintaining opacity in ImageMagick 7
+        }
 
         $clone = clone $imagickInstance;
         $clone->compositeImage($temporary, $composite_flag, 0, 0);
-        $clone->setImageOpacity($alpha);
 
+        if (method_exists($clone, 'setImageAlpha')) { // ImageMagick >= 7
+            $clone->setImageAlpha($alpha);
+        } else {
+            $clone->setImageOpacity($alpha);
+        }
+        
         $imagickInstance->compositeImage($clone, \Imagick::COMPOSITE_DEFAULT, 0, 0);
     }
 
@@ -1352,6 +1677,9 @@ class ImagerService extends BaseApplicationComponent
                 case 'pngquant':
                     $this->makeTask('Imager_Pngquant', $file);
                     break;
+                case 'gifsicle':
+                    $this->makeTask('Imager_Gifsicle', $file);
+                    break;
                 case 'tinypng':
                     $this->makeTask('Imager_TinyPng', $file);
                     break;
@@ -1373,6 +1701,9 @@ class ImagerService extends BaseApplicationComponent
                 case 'pngquant':
                     $this->runPngquant($file);
                     break;
+                case 'gifsicle':
+                    $this->runGifsicle($file);
+                    break;
                 case 'tinypng':
                     $this->runTinyPng($file);
                     break;
@@ -1388,13 +1719,17 @@ class ImagerService extends BaseApplicationComponent
      */
     public function runJpegoptim($file)
     {
-        $cmd = $this->getSetting('jpegoptimPath');
-        $cmd .= ' ';
-        $cmd .= $this->getSetting('jpegoptimOptionString');
-        $cmd .= ' ';
-        $cmd .= $file;
-
-        $this->executeOptimize($cmd, $file);
+        if ($this->getSetting('skipExecutableExistCheck') || file_exists($this->getSetting('jpegoptimPath'))) {
+            $cmd = $this->getSetting('jpegoptimPath');
+            $cmd .= ' ';
+            $cmd .= $this->getSetting('jpegoptimOptionString');
+            $cmd .= ' ';
+            $cmd .= '"'.$file.'"';
+    
+            $this->executeOptimize($cmd, $file);
+        } else {
+            ImagerPlugin::log("jpegoptim could not be found in the supplied path (" . $this->getSetting('jpegoptimPath') . ")", LogLevel::Error);
+        }
     }
 
     /**
@@ -1405,15 +1740,19 @@ class ImagerService extends BaseApplicationComponent
      */
     public function runJpegtran($file)
     {
-        $cmd = $this->getSetting('jpegtranPath');
-        $cmd .= ' ';
-        $cmd .= $this->getSetting('jpegtranOptionString');
-        $cmd .= ' -outfile ';
-        $cmd .= $file;
-        $cmd .= ' ';
-        $cmd .= $file;
-
-        $this->executeOptimize($cmd, $file);
+        if ($this->getSetting('skipExecutableExistCheck') || file_exists($this->getSetting('jpegtranPath'))) {
+            $cmd = $this->getSetting('jpegtranPath');
+            $cmd .= ' ';
+            $cmd .= $this->getSetting('jpegtranOptionString');
+            $cmd .= ' -outfile ';
+            $cmd .= '"'.$file.'"';
+            $cmd .= ' ';
+            $cmd .= '"'.$file.'"';
+    
+            $this->executeOptimize($cmd, $file);
+        } else {
+            ImagerPlugin::log("jpegtran could not be found in the supplied path (" . $this->getSetting('jpegtranPath') . ")", LogLevel::Error);
+        }
     }
 
     /**
@@ -1424,15 +1763,19 @@ class ImagerService extends BaseApplicationComponent
      */
     public function runMozjpeg($file)
     {
-        $cmd = $this->getSetting('mozjpegPath');
-        $cmd .= ' ';
-        $cmd .= $this->getSetting('mozjpegOptionString');
-        $cmd .= ' -outfile ';
-        $cmd .= $file;
-        $cmd .= ' ';
-        $cmd .= $file;
-
-        $this->executeOptimize($cmd, $file);
+        if ($this->getSetting('skipExecutableExistCheck') || file_exists($this->getSetting('mozjpegPath'))) {
+            $cmd = $this->getSetting('mozjpegPath');
+            $cmd .= ' ';
+            $cmd .= $this->getSetting('mozjpegOptionString');
+            $cmd .= ' -outfile ';
+            $cmd .= '"'.$file.'"';
+            $cmd .= ' ';
+            $cmd .= '"'.$file.'"';
+    
+            $this->executeOptimize($cmd, $file);
+        } else {
+            ImagerPlugin::log("mozjpeg could not be found in the supplied path (" . $this->getSetting('mozjpegPath') . ")", LogLevel::Error);
+        }
     }
 
     /**
@@ -1443,13 +1786,17 @@ class ImagerService extends BaseApplicationComponent
      */
     public function runOptipng($file)
     {
-        $cmd = $this->getSetting('optipngPath');
-        $cmd .= ' ';
-        $cmd .= $this->getSetting('optipngOptionString');
-        $cmd .= ' ';
-        $cmd .= $file;
-
-        $this->executeOptimize($cmd, $file);
+        if ($this->getSetting('skipExecutableExistCheck') || file_exists($this->getSetting('optipngPath'))) {
+            $cmd = $this->getSetting('optipngPath');
+            $cmd .= ' ';
+            $cmd .= $this->getSetting('optipngOptionString');
+            $cmd .= ' ';
+            $cmd .= '"'.$file.'"';
+    
+            $this->executeOptimize($cmd, $file);
+        } else {
+            ImagerPlugin::log("optipng could not be found in the supplied path (" . $this->getSetting('optipngPath') . ")", LogLevel::Error);
+        }
     }
 
     /**
@@ -1460,16 +1807,42 @@ class ImagerService extends BaseApplicationComponent
      */
     public function runPngquant($file)
     {
-        $cmd = $this->getSetting('pngquantPath');
-        $cmd .= ' ';
-        $cmd .= $this->getSetting('pngquantOptionString');
-        $cmd .= ' ';
-        $cmd .= '-f -o ';
-        $cmd .= $file;
-        $cmd .= ' ';
-        $cmd .= $file;
+        if ($this->getSetting('skipExecutableExistCheck') || file_exists($this->getSetting('pngquantPath'))) {
+            $cmd = $this->getSetting('pngquantPath');
+            $cmd .= ' ';
+            $cmd .= $this->getSetting('pngquantOptionString');
+            $cmd .= ' ';
+            $cmd .= '-f -o ';
+            $cmd .= '"'.$file.'"';
+            $cmd .= ' ';
+            $cmd .= '"'.$file.'"';
+    
+            $this->executeOptimize($cmd, $file);
+        } else {
+            ImagerPlugin::log("pngquant could not be found in the supplied path (" . $this->getSetting('pngquantPath') . ")", LogLevel::Error);
+        }
+    }
 
-        $this->executeOptimize($cmd, $file);
+    /**
+     * Run gifsicle optimization
+     *
+     * @param $file
+     * @param $transform
+     */
+    public function runGifsicle($file)
+    {
+        if ($this->getSetting('skipExecutableExistCheck') || file_exists($this->getSetting('gifsiclePath'))) {
+            $cmd = $this->getSetting('gifsiclePath');
+            $cmd .= ' ';
+            $cmd .= $this->getSetting('gifsicleOptionString');
+            $cmd .= ' ';
+            $cmd .= '-b ';
+            $cmd .= '"'.$file.'"';
+            
+            $this->executeOptimize($cmd, $file);
+        } else {
+            ImagerPlugin::log("gifsicle could not be found in the supplied path (" . $this->getSetting('gifsiclePath') . ")", LogLevel::Error);
+        }
     }
 
     /**
@@ -1501,10 +1874,49 @@ class ImagerService extends BaseApplicationComponent
 
         if ($this->getSetting('logOptimizations')) {
             ImagerPlugin::log("Optimized image $file \n\n" . $r, LogLevel::Info, true);
+			ImagerPlugin::log($command, LogLevel::Info, true);
         }
     }
 
+    /**
+     * Checks if asset is animated.
+     * 
+     * An animated gif contains multiple "frames", with each frame having a header made up of:
+     *  - a static 4-byte sequence (\x00\x21\xF9\x04)
+     *  - 4 variable bytes
+     *  - a static 2-byte sequence (\x00\x2C)
+     *
+     * We read through the file til we reach the end of the file, or we've found at least 2 frame headers
+     * 
+     * @param $asset
+     * @return bool
+     */
+    public function isAnimated($asset)
+    {
+        $paths = new Imager_ImagePathsModel($asset);
+        $pathParts = pathinfo($paths->sourceFilename);
+        $extension  = $pathParts['extension'];
+        
+        if ($extension!=='gif') {
+            return false;
+        }
 
+        if(!($fh = @fopen($paths->sourcePath . $paths->sourceFilename, 'rb'))) {
+            return false;
+        }
+        
+        $count = 0;
+        
+        while(!feof($fh) && $count < 2) {
+            $chunk = fread($fh, 1024 * 100); //read 100kb at a time
+            $count += preg_match_all('#\x00\x21\xF9\x04.{4}\x00[\x2C\x21]#s', $chunk, $matches);
+        }
+    
+        fclose($fh);
+        
+        return $count > 0; 
+    }
+    
     /**
      * Registers a Task with Craft, taking into account if there is already one pending
      *
@@ -1651,6 +2063,24 @@ class ImagerService extends BaseApplicationComponent
         return $new_arr;
     }
 
+    /**
+     * Check if current file is the final version
+     *
+     * @param $transform
+     * @return bool
+     */
+    private function _checkIsFinalVersion($transform)
+    {
+        if ($this->getSetting('optimizeType', $transform) == 'task')
+        {
+            if ($this->getSetting('jpegoptimEnabled', $transform) || $this->getSetting('jpegtranEnabled', $transform) || $this->getSetting('mozjpegEnabled', $transform) || $this->getSetting('optipngEnabled', $transform) || $this->getSetting('pngquantEnabled', $transform) || $this->getSetting('gifsicleEnabled', $transform) || $this->getSetting('tinyPngEnabled', $transform))
+            {
+                return false;
+            }
+        }
+
+        return true;
+    }
 
     /**
      * Fixes slashes in path

@@ -36,7 +36,8 @@ Craft.EditableTable = Garnish.Base.extend(
 		}
 		else
 		{
-			this.addListener(Garnish.$win, 'resize', 'initializeIfVisible');
+            // Give everything a chance to initialize
+			setTimeout($.proxy(this, 'initializeIfVisible'), 500);
 		}
 	},
 
@@ -68,10 +69,16 @@ Craft.EditableTable = Garnish.Base.extend(
 
 	initializeIfVisible: function()
 	{
-		if (this.isVisible())
+        this.removeListener(Garnish.$win, 'resize');
+
+        if (this.isVisible())
+        {
+            this.initialize();
+        }
+        else
 		{
-			this.initialize();
-		}
+            this.addListener(Garnish.$win, 'resize', 'initializeIfVisible');
+        }
 	},
 
 	addRow: function()
@@ -84,7 +91,7 @@ Craft.EditableTable = Garnish.Base.extend(
 		this.sorter.addItems($tr);
 
 		// Focus the first input in the row
-		$tr.find('input,textarea,select').first().focus();
+		$tr.find('input,textarea,select').first().trigger('focus');
 
 		// onAddRow callback
 		this.settings.onAddRow($tr);

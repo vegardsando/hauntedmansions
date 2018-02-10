@@ -6,10 +6,10 @@ $appPath = realpath(dirname(dirname(dirname(__FILE__))));
 
 if (isset($appPath[0]) && isset($appPath[1]))
 {
-    if ($appPath[0] !== '\\' && $appPath[1] !== '\\')
-    {
-        $appPath = str_replace('\\', '/', $appPath);
-    }
+	if ($appPath[0] !== '\\' && $appPath[1] !== '\\')
+	{
+		$appPath = str_replace('\\', '/', $appPath);
+	}
 }
 
 $frontConfigPath = false;
@@ -22,7 +22,7 @@ if (isset($_SERVER['argv']))
 		if (strpos($arg, '--configPath=') !== false)
 		{
 			$parts = explode('=', $arg);
-			$frontConfigPath = rtrim($parts[1], '/').'/';
+			$frontConfigPath = realpath($parts[1]).'/';
 			unset($_SERVER['argv'][$key]);
 			break;
 		}
@@ -59,7 +59,7 @@ ini_set('display_errors', 1);
 defined('YII_DEBUG') || define('YII_DEBUG', true);
 defined('YII_TRACE_LEVEL') || define('YII_TRACE_LEVEL', 3);
 
-require_once dirname(__FILE__).'/../../framework/yii.php';
+require_once CRAFT_FRAMEWORK_PATH.'yii.php';
 require_once CRAFT_APP_PATH.'Craft.php';
 require_once CRAFT_APP_PATH.'Info.php';
 
@@ -77,7 +77,7 @@ Yii::$enableIncludePath = false;
 require_once(dirname(__FILE__).'/ConsoleApp.php');
 
 // Because CHttpRequest is one of those stupid Yii files that has multiple classes defined in it.
-require_once(CRAFT_APP_PATH.'framework/web/CHttpRequest.php');
+require_once(CRAFT_FRAMEWORK_PATH.'web/CHttpRequest.php');
 
 Yii::setPathOfAlias('app', CRAFT_APP_PATH);
 Yii::setPathOfAlias('plugins', CRAFT_PLUGINS_PATH);

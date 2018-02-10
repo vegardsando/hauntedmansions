@@ -33,6 +33,15 @@ Craft.AssetIndex = Craft.BaseElementIndex.extend(
 		if (this.settings.context == 'index')
 		{
 			this._initIndexPageMode();
+			this.addListener(Garnish.$win, 'resize,scroll', '_positionProgressBar');
+		}
+		else
+		{
+			this.addListener(this.$main, 'scroll', '_positionProgressBar');
+
+			if (this.settings.modal) {
+				this.settings.modal.on('updateSizeAndPosition', $.proxy(this, '_positionProgressBar'));
+			}
 		}
 	},
 
@@ -778,7 +787,7 @@ Craft.AssetIndex = Craft.BaseElementIndex.extend(
 
 			if (!$parentSource.hasClass('expanded'))
 			{
-				$parentSource.children('.toggle').click();
+				$parentSource.children('.toggle').trigger('click');
 			}
 		}
 
@@ -833,7 +842,7 @@ Craft.AssetIndex = Craft.BaseElementIndex.extend(
 			}
 			if (!this.isIndexBusy)
 			{
-				this.$uploadButton.parent().find('input[name=assets-upload]').click();
+				this.$uploadButton.parent().find('input[name=assets-upload]').trigger('click');
 			}
 		}, this));
 
@@ -948,6 +957,7 @@ Craft.AssetIndex = Craft.BaseElementIndex.extend(
 		this._positionProgressBar();
 		this.progressBar.resetProgressBar();
 		this.progressBar.showProgressBar();
+        this.promptHandler.resetPrompts();
 	},
 
 	/**
@@ -1263,7 +1273,7 @@ Craft.AssetIndex = Craft.BaseElementIndex.extend(
 		// Collapse any temp-expanded drop targets that aren't parents of this one
 		this._collapseExtraExpandedFolders(this._getFolderIdFromSourceKey(this.dropTargetFolder.data('key')));
 
-		this.dropTargetFolder.siblings('.toggle').click();
+		this.dropTargetFolder.siblings('.toggle').trigger('click');
 
 		// Keep a record of that
 		this._tempExpandedFolders.push(this.dropTargetFolder);
@@ -1273,7 +1283,7 @@ Craft.AssetIndex = Craft.BaseElementIndex.extend(
 	{
 		if ($source.parent().hasClass('expanded'))
 		{
-			$source.siblings('.toggle').click();
+			$source.siblings('.toggle').trigger('click');
 		}
 	},
 
@@ -1469,19 +1479,21 @@ Craft.AssetIndex = Craft.BaseElementIndex.extend(
 	_positionProgressBar: function()
 	{
 		var $container = $(),
+			scrollTop = 0,
 			offset = 0;
 
 		if (this.settings.context == 'index')
 		{
 			$container = this.progressBar.$progressBar.closest('#content');
+			scrollTop = Garnish.$win.scrollTop();
 		}
 		else
 		{
 			$container = this.progressBar.$progressBar.closest('.main');
+			scrollTop = this.$main.scrollTop();
 		}
 
 		var containerTop = $container.offset().top;
-		var scrollTop = Garnish.$doc.scrollTop();
 		var diff = scrollTop - containerTop;
 		var windowHeight = Garnish.$win.height();
 
@@ -1492,6 +1504,11 @@ Craft.AssetIndex = Craft.BaseElementIndex.extend(
 		else
 		{
 			offset = ($container.height() / 2) - 6;
+		}
+
+		if(this.settings.context != 'index')
+		{
+			offset = scrollTop + (($container.height() / 2) - 6);
 		}
 
 		this.progressBar.$progressBar.css({
