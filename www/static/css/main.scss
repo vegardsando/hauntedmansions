@@ -52,7 +52,7 @@ body {
   font-family: $font_default;
   color: #FFFFFF;
   background: none;
-  background-image: url('/static/svg/symbols/icon-mute.svg');
+  background-image: url('/dynamic/upload/filer/icon-mute.svg');
   background-repeat: no-repeat;
   background-size: 35px;
   background-position: 75px -3px;
@@ -65,7 +65,7 @@ body {
     text-decoration: line-through;
     cursor: pointer;
     color: $color_pr3;
-    background-image: url('/static/svg/symbols/icon-mute-hover.svg');
+    background-image: url('/dynamic/upload/filer/icon-mute-hover.svg');
   }
 }
 
@@ -97,10 +97,6 @@ body {
   margin-top: 7%;
   margin-left: 10%;
   max-width: 650px;
-
-  &:hover {
-    src:url('/static/img/HM logo-hover.svg');
-  }
 }
 
 .submenu {
