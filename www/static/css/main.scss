@@ -15,12 +15,8 @@ body {
   background-size: cover;
 
   @media #{$tablet} {
-    background-position: 50% 50%;
+    background-position: 50% 0%;
 	}
-
-  @media #{$desktop} {
-    background-position: 50% 50%;
-  }
 
 
   h1 {
