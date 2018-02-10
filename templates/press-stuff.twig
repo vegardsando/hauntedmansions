@@ -34,7 +34,7 @@
 						              <div class="swiper-slide designblock bilde">
 						                  <img class="lazyload" {{ not LP ? 'data-' }}srcset="{{bilde[0].url}} 400w, {{bilde[1].url}} 767w, {{bilde[2].url}}" src="{{ craft.imager.base64Pixel(16, 9) }}" alt="{{img.title | default("")}}">
 						                <aside class="bildetekst">
-															<a href="">Download full size</a>
+															<a href="{{slide.url}}" target="_blank">Download full size</a>
 						                </aside>
 						              </div>
 						              {% endfor %}
