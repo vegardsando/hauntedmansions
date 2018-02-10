@@ -136,8 +136,6 @@ body {
     text-align: center;
   }
 
-
-
   @media #{$tablet} {
 		width: 65%;
     padding-left: 50px;
@@ -179,8 +177,18 @@ body {
 }
 
 .social-icons {
-  width: 80px;
-  height: 80px;
+  max-width: 140px;
+  height: 35px;
+
+  @media #{$desktop} {
+    max-width: 150px;
+    height: 45px;
+  }
+
+  a:hover {
+    text-decoration: none;
+  }
+
 }
 
 .text-block{
