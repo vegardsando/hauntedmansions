@@ -10,10 +10,25 @@ body {
   position: absolute;
   top: 0;
   left: 0;
-  background-size: cover;
+  background-size: inherit;
   background-attachment: fixed;
+  background-position: 42% 50%;
   width: 100%;
   min-height: 100%;
+
+  @media #{$tablet} {
+		background-size: cover;
+    background-position: 50% 50%;
+	}
+
+  @media #{$desktop} {
+    background-size: cover;
+    background-position: 50% 50%;
+  }
+
+
+
+
 
   h1 {
     color: #FFFFFF;
