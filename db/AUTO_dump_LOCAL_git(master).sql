@@ -3,7 +3,7 @@
 -- Host: localhost	Database: hauntedmansions_craft
 -- ------------------------------------------------------
 -- Server version 	5.6.28
--- Date: Mon, 12 Feb 2018 20:06:23 +0000
+-- Date: Mon, 12 Feb 2018 20:44:05 +0000
 
 /*!40101 SET @OLD_CHARACTER_SET_CLIENT=@@CHARACTER_SET_CLIENT */;
 /*!40101 SET @OLD_CHARACTER_SET_RESULTS=@@CHARACTER_SET_RESULTS */;
@@ -2776,4 +2776,4 @@ COMMIT;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on: Mon, 12 Feb 2018 20:06:24 +0000
+-- Dump completed on: Mon, 12 Feb 2018 20:44:06 +0000

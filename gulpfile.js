@@ -117,7 +117,7 @@ var FAVICON_DATA_FILE = START+'/favicon/faviconData.json';
 gulp.task('favicon', function(done) {
 	if (fs.existsSync(START +'/favicon.png')) {
 		var bgColor = '#ffffff';
-		loadPlugins.realFavicon.generateFavicon({
+		plugins.realFavicon.generateFavicon({
 			masterPicture: START +'/favicon.png',
 			dest: START+'/favicon',
 			iconsPath: '/favicon',
@@ -135,7 +135,7 @@ gulp.task('favicon', function(done) {
 					pictureAspect: 'noChange',
 					themeColor: bgColor,
 					manifest: {
-						name: 'Renholdsportalen',
+						name: 'Mustasj',
 						display: 'browser',
 						orientation: 'notSet',
 						onConflict: 'override',
@@ -157,13 +157,14 @@ gulp.task('favicon', function(done) {
 		}, function() {
 			gulp.start(["check-for-favicon-update", "inject-favicon-markups"]);
 			gulp.src(START + '/favicon/favicon.ico')
-				.pipe(loadPlugins.plumber({ errorHandler: onError }))
+				.pipe(plugins.plumber({ errorHandler: onError }))
 				.pipe(gulp.dest(START));
 
 			done();
 		});
 	} else {
-		loadPlugins.util.log("\t"+ colors.red('favicon.png mangler i '+START+' mappen. Bør være 260 x 260'));
+		plugins.util.log("\t"+ colors.red('favicon.png mangler i '+START+' mappen. Bør være 260 x 260'));
+		gulp.start("check-for-favicon-update");
 		done();
 	}
 });
