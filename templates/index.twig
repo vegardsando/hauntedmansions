@@ -4,7 +4,7 @@
 {% block content %}
 	{# {% cache until midnight %}{% minify %} #}
 
-			<button type="button" id="btn-startstop">.don't &nbsp; &nbsp; &nbsp; annoy me</button>
+			{# <button type="button" id="btn-startstop">.don't &nbsp; &nbsp; &nbsp; annoy me</button> #}
 			<article class="inner-wrapper">
 				<h1>Haunted Mansions</h1>
 				<a href="/">
@@ -14,7 +14,7 @@
 					{{ craft.amNav.getNav("mainMenu") }}
 				</div>
 
-				<div class="visualizer" data-lydfil="{{entry.lydfil[0].url}}">
+				{# <div class="visualizer" data-lydfil="{{entry.lydfil[0].url}}">
 					<canvas id="freq"></canvas>
 					<span id="loading"></span>
 				</div>
@@ -23,7 +23,7 @@
 				<article class="text-block">
 					<h2 id="about">.about the music</h2>
 					{{entry.aboutTheMusic}}
-				</article>
+				</article> #}
 
 				{% if entry.events|length %}
 					<article class="text-block">

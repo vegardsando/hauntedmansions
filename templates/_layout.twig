@@ -61,20 +61,20 @@
 				<p>Du mangler innhold</p>
 			{% endblock %}
 
-			<footer>
-				<section class="social-section">
-					{% for knapp in footer.social %}
-						<a class="social-icons" href="{{knapp.social_url}}" target="_blank">
-							<img src="{{knapp.social_ikon[0].url}}">
-						</a>
-					{% endfor %}
-				</section>
-
-				<img class="logo-emblem" src="{{footer.logoElement[0].url}}" alt="Haunted Mansions">
-				{{footer.enkelTekst}}
-			</footer>
-
 		</section>
+		<footer>
+
+			<section class="social-section">
+				{% for knapp in footer.social %}
+					<a class="social-icons" href="{{knapp.social_url}}" target="_blank">
+						<img src="{{knapp.social_ikon[0].url}}">
+					</a>
+				{% endfor %}
+			</section>
+
+			<img class="logo-emblem" src="{{footer.logoElement[0].url}}" alt="Haunted Mansions">
+			{{footer.enkelTekst}}
+		</footer>
 
 
 	<!--[if lt IE 9]> <script src="https://oss.maxcdn.com/libs/html5shiv/3.7.0/html5shiv.js"></script> <script src="https://oss.maxcdn.com/libs/respond.js/1.4.2/respond.min.js"></script> <![endif]-->

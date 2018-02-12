@@ -70,13 +70,13 @@ if (typeof FastClick === 'function') { FastClick.attach(document.body); }
 
 	$html.addClass('lastet');
 
-  if ($(".visualizer").attr("data-lydfil") && desktop == true ) {
-    setTimeout(function(){
-      lydfil = $(".visualizer").attr("data-lydfil");
-      console.log(lydfil);
-      playSong();
-    }, 3000);
-  }
+  // if ($(".visualizer").attr("data-lydfil") && desktop == true ) {
+  //   setTimeout(function(){
+  //     lydfil = $(".visualizer").attr("data-lydfil");
+  //     console.log(lydfil);
+  //     playSong();
+  //   }, 3000);
+  // }
 
   // SWIPERS
   $swipers.each(function() {
