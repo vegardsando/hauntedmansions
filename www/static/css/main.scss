@@ -105,6 +105,17 @@ body {
 .inner-wrapper {
   position: relative;
   z-index: 1;
+
+  >a {
+    display: block;
+    text-align: center;
+
+    @media #{$tablet} {
+      text-align: left;
+    }
+
+  }
+
 }
 
 .bandlogo {
