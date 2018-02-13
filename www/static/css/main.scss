@@ -107,7 +107,7 @@ body {
 
 .bandlogo {
   margin-top: 50px;
-  margin-left: 10%;
+  margin-left: 7%;
   max-width: 650px;
 
   @media #{$tablet} {
@@ -180,6 +180,7 @@ body {
 
 .social-section {
   text-align: center;
+  margin-bottom: 40px;
 
   // @media #{$desktop} {
   //   position: fixed;
@@ -193,7 +194,6 @@ body {
   display: inline-block;
   margin-bottom: 0px;
   padding: 10px;
-  margin-bottom: 40px;
 
   @media #{$tablet} {
 
