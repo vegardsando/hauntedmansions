@@ -72,7 +72,9 @@
 				{% endfor %}
 			</section>
 
-			<img class="logo-emblem" src="{{footer.logoElement[0].url}}" alt="Haunted Mansions">
+			{% if footer.logoElement[0] %}
+				<img class="logo-emblem" src="{{footer.logoElement[0].url}}" alt="Haunted Mansions">
+			{% if craft.request.isLivePreview %}
 			{{footer.enkelTekst}}
 		</footer>
 
