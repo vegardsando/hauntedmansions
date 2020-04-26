@@ -25,6 +25,13 @@
 					{{entry.aboutTheMusic}}
 				</article> #}
 
+				{% if entry.button|length %}
+					<article class="text-block">
+						<h2 id="events">Pre-order Rebel News now!</h2>
+							<div class="button">{{entry.button-text}}</div>
+						</article>
+				{% endif %}
+
 				{% if entry.events|length %}
 					<article class="text-block">
 						<h2 id="events">.upcoming events</h2>
